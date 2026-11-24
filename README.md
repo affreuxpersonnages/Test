@@ -17,6 +17,13 @@ node server.js          # Node 18+, aucune dépendance
 
 Variable `PORT` pour changer le port. Les données sont enregistrées dans `data/db.json`.
 
+### Code d'accès pro : `1234`
+
+L'espace pro demande un code (par défaut **1234**, modifiable dans l'onglet Développeur,
+ou imposé avec la variable `ADMIN_PIN`). Avec le serveur Node, l'API exige ce code
+(en-tête `x-admin-pin`) pour toute modification ; il n'est jamais renvoyé aux visiteurs.
+Un client peut seulement annuler son propre RDV (vérification par téléphone).
+
 Le fichier `public/index.html` fonctionne aussi **seul** (ouvert sans serveur) : il bascule alors
 sur le stockage du navigateur (`localStorage`), pratique pour tester.
 
@@ -51,8 +58,11 @@ sur le stockage du navigateur (`localStorage`), pratique pour tester.
 | PATCH | `/api/bookings/:id` | `{ status }` |
 | POST | `/api/bookings/delete` | `{ ids: [] }` |
 | PUT | `/api/state` | Import complet |
+| POST | `/api/login` | `{ pin }` → 200 ou 401 |
+
+Routes de modification (config, import, suppression, PATCH) : en-tête `x-admin-pin` requis.
 
 ## À prévoir avant une mise en production
 
-Version de test : l'espace pro n'a **pas d'authentification**, et aucun SMS / e-mail de rappel n'est envoyé.
-À ajouter : login pro, envoi de confirmations, paiement d'acompte, base de données (SQLite/Postgres).
+Version de test : l'accès pro est un simple code partagé et aucun SMS / e-mail de rappel n'est envoyé.
+À ajouter : vrais comptes pro, envoi de confirmations, paiement d'acompte, base de données (SQLite/Postgres).

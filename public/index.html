@@ -296,7 +296,7 @@ const DEFAULT_CONFIG = {
   },
   rules: {
     slotStep: 15, minNoticeHours: 2, maxDaysAhead: 45, bufferMin: 5, cancelHours: 24,
-    autoConfirm: true, allowNoPreference: true, maxOptions: 3, depositPct: 0, requireEmail: false,
+    autoConfirm: true, allowNoPreference: true, maxOptions: 3, depositPct: 0, requireEmail: false, proPin: '1234',
     lengths: {
       courts: { label: 'Cheveux courts', hint: 'Au-dessus des oreilles', price: 0, dur: 0 },
       milongs: { label: 'Mi-longs', hint: 'Jusqu’aux épaules', price: 8, dur: 10 },
@@ -366,7 +366,7 @@ const Store = {
     if (window.claude && typeof window.claude.use === 'function') {
       try { const db = await window.claude.use('db'); if (db) return this.initDb(db); } catch (e) {}
     } else if (location.protocol.startsWith('http')) {
-      try { const r = await fetch('api/state', { cache: 'no-store' }); if (r.ok) return this.initApi(await r.json()); } catch (e) {}
+      try { const r = await fetch('api/state', { cache: 'no-store', headers: { 'x-admin-pin': P.pin || '' } }); if (r.ok) return this.initApi(await r.json()); } catch (e) {}
     }
     this.initLocal();
   },
@@ -382,12 +382,13 @@ const Store = {
   initApi(state) {
     this.mode = 'api'; this.applyApi(state); this.loading = false; this.note('Connecté à l’API REST /api'); render();
     setInterval(async () => {
-      try { const r = await fetch('api/state', { cache: 'no-store' }); if (r.ok) { const s = await r.json(); if (JSON.stringify(s) !== this._last) { this.applyApi(s); render(); } } } catch (e) {}
+      try { const r = await fetch('api/state', { cache: 'no-store', headers: { 'x-admin-pin': P.pin || '' } }); if (r.ok) { const s = await r.json(); if (JSON.stringify(s) !== this._last) { this.applyApi(s); render(); } } } catch (e) {}
     }, 5000);
   },
+  async refreshApi() { try { const r = await fetch('api/state', { cache: 'no-store', headers: { 'x-admin-pin': P.pin || '' } }); if (r.ok) { this.applyApi(await r.json()); render(); } } catch (e) {} },
   applyApi(s) { this._last = JSON.stringify(s); this.config = normalizeConfig(s.config); this.bookings = s.bookings || []; },
   async api(method, url, body) {
-    const r = await fetch(url, { method, headers: { 'content-type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+    const r = await fetch(url, { method, headers: { 'content-type': 'application/json', 'x-admin-pin': P.pin || '' }, body: body ? JSON.stringify(body) : undefined });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) { const e = new Error(j.message || 'Erreur serveur'); e.code = j.error || r.status; throw e; }
     return j;
@@ -438,10 +439,10 @@ const Store = {
     } else { this.bookings.push(b); this.persistLocal(); }
     this.note(`RDV ${b.id} créé · ${b.date} ${b.time} · ${b.client.name}`);
   },
-  async updateBooking(id, patch) {
+  async updateBooking(id, patch, verifyPhone) {
     const b = this.bookings.find(x => x.id === id); if (!b) return;
     patch = { ...patch, updatedAt: new Date().toISOString() };
-    if (this.mode === 'api') await this.api('PATCH', 'api/bookings/' + encodeURIComponent(id), patch);
+    if (this.mode === 'api') await this.api('PATCH', 'api/bookings/' + encodeURIComponent(id), verifyPhone ? { ...patch, verifyPhone } : patch);
     else if (this.mode === 'db') await this.db.doc('bookings/' + id).update(patch);
     Object.assign(b, patch);
     if (this.mode === 'local') this.persistLocal();
@@ -530,7 +531,22 @@ function canCancel(b) {
 const G = { step: 1, cat: 'femme', serviceId: null, length: 'courts', optionIds: [], staffId: 'any', date: null, time: null,
   client: { name: '', phone: '', email: '', note: '', first: false, consent: false }, error: '', busy: false, done: null };
 const M = { code: '', phone: '', result: null, error: '', confirmCancel: false };
-const P = { tab: 'planning', date: today(), filter: 'upcoming', status: 'all', q: '', sel: null, confirm: null, importText: '', importErr: '', flash: '' };
+const P = { tab: 'planning', date: today(), filter: 'upcoming', status: 'all', q: '', sel: null, confirm: null, importText: '', importErr: '', flash: '', pin: '', pinInput: '', pinErr: '', unlocked: false };
+try { const k = sessionStorage.getItem('atelier-meche-pin'); if (k) { P.pin = k; P.unlocked = true; } } catch (e) {}
+function checkPin(v) { return String(v) === String(C().rules.proPin || '1234'); }
+function lockPro() { P.unlocked = false; P.pin = ''; try { sessionStorage.removeItem('atelier-meche-pin'); } catch (e) {} }
+function viewLock() {
+  return `<section class="card panel" style="max-width:380px;margin:40px auto;text-align:center;justify-items:center">
+    <span class="brand-mark" style="width:48px;height:48px" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="var(--accent-ink)" stroke-width="1.8" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+    <div class="panel-head"><h1>Espace pro</h1><p class="muted">Saisissez le code d’accès du salon.</p></div>
+    <form id="pin-form" style="display:grid;gap:12px;width:100%">
+      <input id="pin-input" type="password" inputmode="numeric" autocomplete="off" maxlength="12" data-pinbind="1" value="${esc(P.pinInput)}" placeholder="••••" style="text-align:center;font-size:1.4rem;letter-spacing:.4em" autofocus>
+      ${P.pinErr ? `<p class="notice err">${esc(P.pinErr)}</p>` : ''}
+      <button class="btn primary" type="submit">Déverrouiller</button>
+    </form>
+    <p class="muted" style="font-size:.82rem">Code de test : 1234 (modifiable dans l’onglet Développeur).</p>
+  </section>`;
+}
 
 function route() { const h = location.hash.slice(1); return ['reserver', 'mes-rdv', 'pro'].includes(h) ? h : 'reserver'; }
 
@@ -696,12 +712,13 @@ function viewMine() {
 /* ---------------- Interface pro / développeur ---------------- */
 const PRO_TABS = [['planning', 'Planning'], ['rdv', 'Réservations'], ['catalogue', 'Prestations & options'], ['equipe', 'Équipe'], ['regles', 'Horaires & règles'], ['dev', 'Développeur']];
 function viewPro() {
+  if (!P.unlocked) return viewLock();
   const t = today(), wkEnd = addDays(t, 6), live = Store.bookings.filter(b => b.status !== 'cancelled');
   const todayN = live.filter(b => b.date === t).length;
   const week = live.filter(b => b.date >= t && b.date <= wkEnd);
   const pending = Store.bookings.filter(b => b.status === 'pending' && b.date >= t).length;
   return `<div class="pro-head"><div><span class="label">Espace pro · interface de test</span><h1>${esc(C().salon.name)}</h1></div>
-    <div class="toolbar" style="margin:0"><a class="btn" href="#reserver">+ RDV au comptoir</a></div></div>
+    <div class="toolbar" style="margin:0"><a class="btn" href="#reserver">+ RDV au comptoir</a><button class="btn ghost" data-act="lock">Verrouiller</button></div></div>
   ${!Store.canEditConfig ? '<p class="notice" style="margin-bottom:14px">Vous consultez cette page sans droit d’édition : la configuration est en lecture seule.</p>' : ''}
   ${P.flash ? `<p class="notice ok" style="margin-bottom:14px">${esc(P.flash)}</p>` : ''}
   <div class="kpis">
@@ -883,6 +900,10 @@ function proDev() {
   const c = P.confirm;
   const confirmBox = (key, label, act) => c === key ? `<span class="notice err" style="display:inline-flex;gap:8px;align-items:center;padding:6px 10px">Confirmer ? <button class="btn sm danger" data-act="${act}">Oui</button><button class="btn sm" data-act="pconfirm" data-id="">Non</button></span>` : `<button class="btn danger" data-act="pconfirm" data-id="${key}">${label}</button>`;
   return `<div class="grid2">
+  <section class="card section"><h2>Code d’accès pro</h2>
+    <label class="field"><span>Code demandé à l’ouverture de l’espace pro</span><input id="cfg-pin" type="text" inputmode="numeric" maxlength="12" data-cfg="rules.proPin" value="${esc(C().rules.proPin || '1234')}" ${Store.canEditConfig ? '' : 'disabled'} style="max-width:180px"></label>
+    <p class="muted" style="font-size:.85rem">Avec le serveur Node, ce code est aussi exigé par l’API pour toute modification (en-tête <span class="mono">x-admin-pin</span>). Sur la page en ligne de test, il protège l’accès à l’écran seulement.</p>
+  </section>
   <section class="card section"><h2>Environnement</h2>
     <dl class="kv"><dt>Stockage</dt><dd><b class="mono">${Store.mode}</b></dd><dt></dt><dd class="muted">${modes[Store.mode]}</dd>
     <dt>Réservations</dt><dd class="num">${Store.bookings.length} (dont ${Store.bookings.filter(b => b.demo).length} de démo)</dd>
@@ -1004,7 +1025,8 @@ document.addEventListener('click', async e => {
     case 'lookup-mine': M.result = id; M.error = ''; break;
     case 'm-cancel': M.confirmCancel = true; break;
     case 'm-cancel-no': M.confirmCancel = false; break;
-    case 'm-cancel-yes': M.confirmCancel = false; await Store.updateBooking(M.result, { status: 'cancelled', cancelledBy: 'client' }); break;
+    case 'm-cancel-yes': M.confirmCancel = false; try { await Store.updateBooking(M.result, { status: 'cancelled', cancelledBy: 'client' }, M.phone); } catch (x) { M.error = 'Annulation impossible : ' + x.message; } break;
+    case 'lock': lockPro(); break;
     case 'ptab': P.tab = id; P.confirm = null; break;
     case 'pday': P.date = addDays(P.date, +el.dataset.n); P.sel = null; break;
     case 'ptoday': P.date = today(); P.sel = null; break;
@@ -1033,6 +1055,7 @@ document.addEventListener('input', e => {
   const t = e.target;
   if (t.dataset.bind) { G.client[t.dataset.bind] = t.type === 'checkbox' ? t.checked : t.value; return; }
   if (t.dataset.mbind) { M[t.dataset.mbind] = t.value; return; }
+  if (t.dataset.pinbind) { P.pinInput = t.value; return; }
   if (t.dataset.pbind) { P[t.dataset.pbind] = t.value; if (t.dataset.pbind === 'importText') { const b = document.querySelector('[data-act="import"]'); if (b) b.disabled = !t.value.trim(); return; } render(); }
 });
 document.addEventListener('change', async e => {
@@ -1053,6 +1076,20 @@ document.addEventListener('change', async e => {
 document.addEventListener('submit', e => {
   e.preventDefault();
   if (e.target.id === 'client-form') submitBooking();
+  if (e.target.id === 'pin-form') {
+    if (Store.mode === 'api') {
+      const pin = P.pinInput;
+      fetch('api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ pin }) }).then(r => {
+        if (r.ok) { P.pin = pin; P.unlocked = true; P.pinErr = ''; try { sessionStorage.setItem('atelier-meche-pin', pin); } catch (x) {} Store.note('Espace pro déverrouillé'); Store.refreshApi(); }
+        else P.pinErr = 'Code incorrect.';
+        P.pinInput = ''; render();
+      });
+      return;
+    }
+    if (checkPin(P.pinInput)) { P.pin = P.pinInput; P.unlocked = true; P.pinErr = ''; P.pinInput = ''; try { sessionStorage.setItem('atelier-meche-pin', P.pin); } catch (x) {} Store.note('Espace pro déverrouillé'); }
+    else { P.pinErr = 'Code incorrect.'; P.pinInput = ''; }
+    render(); return;
+  }
   if (e.target.id === 'mine-form') {
     const b = Store.bookings.find(x => x.id.toUpperCase() === M.code.trim().toUpperCase());
     M.confirmCancel = false;

@@ -25,6 +25,11 @@ function save() {
 const toMin = t => { const [h, m] = String(t).split(':').map(Number); return h * 60 + (m || 0); };
 const STATUSES = ['confirmed', 'pending', 'cancelled', 'done', 'noshow'];
 
+// Code d'accès pro : variable ADMIN_PIN, sinon celui de la config, sinon 1234.
+const adminPin = () => String(process.env.ADMIN_PIN || state.config?.rules?.proPin || '1234');
+const isAdmin = req => String(req.headers['x-admin-pin'] || '') === adminPin();
+const digits = v => String(v || '').replace(/\D/g, '').slice(-9);
+
 function overlaps(b) {
   const buf = Number(state.config?.rules?.bufferMin) || 0;
   const s = toMin(b.time), e = s + Number(b.duration);
@@ -70,13 +75,24 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
   const p = url.pathname;
   try {
+    const adminOnly = (req.method === 'PUT' && (p === '/api/config' || p === '/api/state')) || (req.method === 'POST' && p === '/api/bookings/delete');
+    if (adminOnly && !isAdmin(req)) return send(res, 401, { error: 'unauthorized', message: 'Code d’accès pro requis' });
     if (req.method === 'GET' && (p === '/' || p === '/index.html')) return send(res, 200, page(), 'text/html; charset=utf-8');
     if (req.method === 'GET' && p === '/api/health') return send(res, 200, { ok: true });
-    if (req.method === 'GET' && p === '/api/state') return send(res, 200, state);
+    if (req.method === 'GET' && p === '/api/state') {
+      if (isAdmin(req) || !state.config?.rules) return send(res, 200, state);
+      const { proPin, ...rules } = state.config.rules; // le code n'est jamais envoyé aux visiteurs
+      return send(res, 200, { ...state, config: { ...state.config, rules } });
+    }
+    if (req.method === 'POST' && p === '/api/login') {
+      const { pin } = await readBody(req);
+      return String(pin || '') === adminPin() ? send(res, 200, { ok: true }) : send(res, 401, { error: 'unauthorized', message: 'Code incorrect' });
+    }
 
     if (req.method === 'PUT' && p === '/api/config') {
       const { config } = await readBody(req);
       if (!config || typeof config !== 'object') return send(res, 400, { error: 'invalid', message: 'config manquante' });
+      if (config.rules && !config.rules.proPin && state.config?.rules?.proPin) config.rules.proPin = state.config.rules.proPin;
       state.config = config; save();
       return send(res, 200, { ok: true });
     }
@@ -112,6 +128,9 @@ const server = http.createServer(async (req, res) => {
       const b = state.bookings.find(x => x.id === decodeURIComponent(m[1]));
       if (!b) return send(res, 404, { error: 'not_found', message: 'Réservation introuvable' });
       const patch = await readBody(req);
+      // Un client peut seulement annuler son propre RDV (vérifié par téléphone) ; le reste exige le code pro.
+      const clientCancel = patch.status === 'cancelled' && patch.verifyPhone && digits(patch.verifyPhone) === digits(b.client?.phone);
+      if (!isAdmin(req) && !clientCancel) return send(res, 401, { error: 'unauthorized', message: 'Code d’accès pro requis' });
       if (patch.status && !STATUSES.includes(patch.status)) return send(res, 400, { error: 'invalid', message: 'statut invalide' });
       for (const k of ['status', 'cancelledBy', 'updatedAt', 'staffId', 'date', 'time', 'note']) if (k in patch) b[k] = patch[k];
       save();
