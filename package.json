@@ -1,0 +1,8 @@
+{
+  "name": "salon-rdv",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Prise de rendez-vous en ligne pour salon de coiffure",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" }
+}

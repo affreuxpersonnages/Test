@@ -1,0 +1,1069 @@
+<title>Réservation Atelier Mèche</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: app shell — top bar, then a two-column workspace (steps + sticky summary) that stacks on phones. */
+:root {
+  --bg: #F2F5F4; --surface: #FFFFFF; --sunken: #E8EEEC; --ink: #142120; --muted: #586B68; --line: #D5DFDC;
+  --accent: #1B6D70; --accent-ink: #FFFFFF; --accent-soft: #D9ECEA;
+  --ok: #2C7A3B; --ok-soft: #DDF0E0; --warn: #A3600F; --warn-soft: #F8EAD6; --danger: #B3261E; --danger-soft: #F7DEDC;
+  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0E1413; --surface: #16201F; --sunken: #1C2827; --ink: #E4EEEC; --muted: #93A6A2; --line: #2A3836;
+  --accent: #4DB2AE; --accent-ink: #05201F; --accent-soft: #17393A;
+  --ok: #6CC67C; --ok-soft: #173321; --warn: #E3A04B; --warn-soft: #3A2A12; --danger: #F08A80; --danger-soft: #3D1A18;
+  color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0E1413; --surface: #16201F; --sunken: #1C2827; --ink: #E4EEEC; --muted: #93A6A2; --line: #2A3836;
+  --accent: #4DB2AE; --accent-ink: #05201F; --accent-soft: #17393A;
+  --ok: #6CC67C; --ok-soft: #173321; --warn: #E3A04B; --warn-soft: #3A2A12; --danger: #F08A80; --danger-soft: #3D1A18;
+  color-scheme: dark }
+
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.5; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface) }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 700; line-height: 1.15; margin: 0; text-wrap: balance }
+h1 { font-size: 1.6rem } h2 { font-size: 1.3rem } h3 { font-size: 1.05rem }
+p { margin: 0 }
+button, input, select, textarea { font: inherit; color: inherit }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+.mono { font-family: var(--font-mono); font-size: .85em }
+.muted { color: var(--muted) }
+.num { font-variant-numeric: tabular-nums }
+.label { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600 }
+
+.wrap { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)) }
+
+/* Top bar */
+.topbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line) }
+.topbar .wrap { display: flex; align-items: center; gap: 16px; padding-block: 10px; flex-wrap: wrap }
+.brand { display: flex; align-items: center; gap: 10px; margin-right: auto; min-width: 0 }
+.brand-mark { width: 34px; height: 34px; border-radius: 50%; background: var(--accent); display: grid; place-items: center; flex: none }
+.brand-mark svg { width: 20px; height: 20px }
+.brand b { font-family: var(--font-display); font-size: 1.1rem; display: block; line-height: 1.1 }
+.brand small { color: var(--muted); font-size: .78rem }
+.nav { display: flex; gap: 4px; flex-wrap: wrap }
+.nav a { text-decoration: none; color: var(--muted); padding: 7px 12px; border-radius: 999px; font-weight: 500; font-size: .9rem }
+.nav a:hover { color: var(--ink); background: var(--sunken) }
+.nav a[aria-current="page"] { background: var(--ink); color: var(--bg) }
+.mode-pill { font-family: var(--font-mono); font-size: .72rem; padding: 3px 8px; border-radius: 999px; background: var(--sunken); color: var(--muted); white-space: nowrap }
+
+main { padding-block: 24px 64px }
+
+/* Buttons & fields */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--line); background: var(--surface); padding: 8px 14px; border-radius: 8px; cursor: pointer; font-weight: 500; font-size: .9rem; text-decoration: none; color: var(--ink) }
+.btn:hover { border-color: var(--muted) }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink) }
+.btn.primary:hover { filter: brightness(1.08) }
+.btn.danger { color: var(--danger); border-color: var(--danger) }
+.btn.ghost { border-color: transparent; background: transparent }
+.btn.sm { padding: 4px 10px; font-size: .82rem }
+.btn:disabled { opacity: .45; cursor: not-allowed }
+.field { display: grid; gap: 4px; min-width: 0 }
+.field > span { font-size: .82rem; font-weight: 500; color: var(--muted) }
+input[type=text], input[type=tel], input[type=email], input[type=number], input[type=time], input[type=date], input[type=search], select, textarea {
+  width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); min-width: 0 }
+textarea { resize: vertical; min-height: 80px }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft) }
+.check { display: flex; gap: 8px; align-items: flex-start; cursor: pointer }
+.check input { margin-top: 3px; accent-color: var(--accent) }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r) }
+.notice { padding: 10px 14px; border-radius: 8px; background: var(--warn-soft); color: var(--warn); font-size: .9rem }
+.notice.err { background: var(--danger-soft); color: var(--danger) }
+.notice.ok { background: var(--ok-soft); color: var(--ok) }
+.notice.info { background: var(--accent-soft); color: var(--ink) }
+
+.badge { display: inline-flex; align-items: center; gap: 5px; font-size: .75rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; white-space: nowrap }
+.badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor }
+.st-confirmed { background: var(--ok-soft); color: var(--ok) }
+.st-pending { background: var(--warn-soft); color: var(--warn) }
+.st-cancelled { background: var(--danger-soft); color: var(--danger) }
+.st-done { background: var(--accent-soft); color: var(--accent) }
+.st-noshow { background: var(--sunken); color: var(--muted) }
+
+/* ---------- Guest booking ---------- */
+.booking { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 24px; align-items: start }
+.steps { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 18px; padding: 0; list-style: none }
+.steps li { display: flex; align-items: center; gap: 6px; font-size: .82rem; color: var(--muted); padding: 4px 10px 4px 4px; border-radius: 999px; background: var(--sunken) }
+.steps li i { font-style: normal; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; background: var(--surface); font-size: .72rem; font-weight: 600 }
+.steps li.on { background: var(--ink); color: var(--bg) }
+.steps li.on i { background: var(--accent); color: var(--accent-ink) }
+.steps li.done i { background: var(--accent); color: var(--accent-ink) }
+.steps li.done { cursor: pointer }
+.panel { padding: 20px; display: grid; gap: 18px }
+.panel-head { display: grid; gap: 4px }
+.tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin }
+.tab { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 14px; cursor: pointer; white-space: nowrap; font-size: .88rem }
+.tab[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent) }
+.svc-list { display: grid; gap: 8px }
+.svc { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 16px; align-items: center; text-align: left; padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); cursor: pointer; width: 100% }
+.svc:hover { border-color: var(--accent) }
+.svc[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); background: var(--accent-soft) }
+.svc .name { font-weight: 600 }
+.svc .desc { color: var(--muted); font-size: .86rem; grid-column: 1 }
+.svc .price { font-weight: 600; text-align: right; font-variant-numeric: tabular-nums }
+.svc .dur { color: var(--muted); font-size: .82rem; text-align: right; font-variant-numeric: tabular-nums }
+.seg { display: flex; flex-wrap: wrap; gap: 8px }
+.seg button { flex: 1 1 140px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); cursor: pointer; text-align: left }
+.seg button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent) }
+.seg small { display: block; color: var(--muted); font-size: .8rem }
+.opt-list { display: grid; gap: 8px }
+.opt { display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: 10px; align-items: center; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; cursor: pointer; background: var(--surface) }
+.opt:has(input:checked) { border-color: var(--accent); background: var(--accent-soft) }
+.opt input { accent-color: var(--accent); width: 18px; height: 18px }
+.opt small { display: block; color: var(--muted) }
+.staff-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px }
+.staff-card { padding: 14px; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); cursor: pointer; text-align: left; display: grid; gap: 8px; justify-items: start }
+.staff-card[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent) }
+.avatar { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-family: var(--font-display); color: #fff; flex: none }
+.days { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: thin }
+.day { flex: none; width: 70px; padding: 8px 4px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); cursor: pointer; text-align: center; display: grid; gap: 1px }
+.day b { font-size: 1.25rem; font-family: var(--font-display); font-variant-numeric: tabular-nums }
+.day span, .day small { font-size: .72rem; color: var(--muted) }
+.day[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink) }
+.day[aria-pressed="true"] span, .day[aria-pressed="true"] small { color: var(--bg); opacity: .8 }
+.day:disabled { opacity: .45; cursor: not-allowed; background: var(--sunken) }
+.slot-group { display: grid; gap: 8px }
+.slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 8px }
+.slot { padding: 8px 0; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); cursor: pointer; font-variant-numeric: tabular-nums; font-weight: 500 }
+.slot:hover { border-color: var(--accent) }
+.slot[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent) }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px }
+.form-grid .full { grid-column: 1 / -1 }
+.actions { display: flex; gap: 10px; justify-content: space-between; flex-wrap: wrap }
+
+.summary { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 76px); padding: 18px; display: grid; gap: 14px }
+.sum-lines { display: grid; gap: 6px; font-size: .9rem }
+.sum-line { display: flex; justify-content: space-between; gap: 12px }
+.sum-line span:last-child { font-variant-numeric: tabular-nums; white-space: nowrap }
+.sum-total { display: flex; justify-content: space-between; align-items: baseline; border-top: 1px dashed var(--line); padding-top: 12px }
+.sum-total b { font-family: var(--font-display); font-size: 1.5rem; font-variant-numeric: tabular-nums }
+.salon-info { font-size: .84rem; color: var(--muted); display: grid; gap: 2px }
+
+.ticket { padding: 28px; display: grid; gap: 18px; justify-items: start }
+.ticket-code { font-family: var(--font-mono); font-size: 1.6rem; letter-spacing: .12em; padding: 6px 14px; border: 2px dashed var(--accent); border-radius: 8px; color: var(--accent) }
+.kv { display: grid; grid-template-columns: max-content minmax(0,1fr); gap: 6px 18px; font-size: .92rem }
+.kv dt { color: var(--muted) } .kv dd { margin: 0 }
+
+/* ---------- Pro / dev ---------- */
+.pro-head { display: flex; justify-content: space-between; align-items: end; gap: 16px; flex-wrap: wrap; margin-bottom: 18px }
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin-bottom: 18px }
+.kpi { padding: 14px 16px; display: grid; gap: 2px }
+.kpi b { font-family: var(--font-display); font-size: 1.6rem; font-variant-numeric: tabular-nums }
+.subnav { display: flex; gap: 2px; border-bottom: 1px solid var(--line); margin-bottom: 18px; overflow-x: auto }
+.subnav button { border: 0; background: none; padding: 10px 14px; cursor: pointer; color: var(--muted); font-weight: 500; border-bottom: 2px solid transparent; white-space: nowrap }
+.subnav button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent) }
+.toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px }
+.toolbar .grow { flex: 1 1 200px }
+
+.planning-wrap { display: grid; grid-template-columns: minmax(0,1fr) 300px; gap: 18px; align-items: start }
+.planning { overflow-x: auto }
+.pl-grid { display: grid; min-width: 520px; position: relative }
+.pl-head { position: sticky; top: 0; background: var(--surface); z-index: 2; padding: 10px 8px; border-bottom: 1px solid var(--line); display: flex; gap: 8px; align-items: center; font-weight: 600; font-size: .9rem }
+.pl-head .avatar { width: 26px; height: 26px; font-size: .75rem }
+.pl-times { position: relative; border-right: 1px solid var(--line) }
+.pl-times span { position: absolute; right: 6px; font-size: .7rem; color: var(--muted); transform: translateY(-50%); font-variant-numeric: tabular-nums }
+.pl-times span:first-child { transform: none }
+.pl-col { position: relative; border-right: 1px solid var(--line) }
+.pl-col:last-child { border-right: 0 }
+.pl-line { position: absolute; left: 0; right: 0; border-top: 1px solid var(--line); opacity: .6 }
+.pl-line.half { border-top-style: dotted; opacity: .4 }
+.pl-off { position: absolute; left: 0; right: 0; background: repeating-linear-gradient(135deg, var(--sunken) 0 6px, transparent 6px 12px) }
+.pl-off span { position: absolute; top: 4px; left: 6px; font-size: .7rem; color: var(--muted) }
+.pl-bk { position: absolute; left: 4px; right: 4px; border-radius: 6px; padding: 4px 7px; font-size: .76rem; line-height: 1.25; overflow: hidden; cursor: pointer; border: 0; text-align: left; border-left: 4px solid; background: var(--accent-soft); color: var(--ink) }
+.pl-bk b { display: block; font-size: .8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.pl-bk.pending { background: var(--warn-soft) }
+.pl-bk.done { opacity: .7 }
+.pl-bk.noshow { background: var(--sunken); text-decoration: line-through }
+.pl-bk[aria-pressed="true"] { outline: 2px solid var(--ink) }
+.pl-now { position: absolute; left: 0; right: 0; border-top: 2px solid var(--danger); z-index: 1 }
+.detail { padding: 18px; display: grid; gap: 14px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 76px) }
+.detail .btns { display: flex; flex-wrap: wrap; gap: 6px }
+
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface) }
+table { border-collapse: collapse; width: 100%; font-size: .88rem }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: middle }
+th { font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; background: var(--sunken); white-space: nowrap }
+tr:last-child td { border-bottom: 0 }
+td.r, th.r { text-align: right }
+td input[type=text], td input[type=number], td select { padding: 5px 8px }
+td input[type=number] { width: 80px }
+tr.inactive td { opacity: .55 }
+
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 18px; align-items: start }
+.section { padding: 18px; display: grid; gap: 14px }
+.hours-row { display: grid; grid-template-columns: 110px 70px repeat(4, minmax(0,1fr)); gap: 8px; align-items: center; font-size: .88rem }
+.hours-row.head { font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em }
+.staff-edit { padding: 16px; display: grid; gap: 12px }
+.chips { display: flex; flex-wrap: wrap; gap: 6px }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px; font-size: .82rem; cursor: pointer; background: var(--surface) }
+.chip:has(input:checked) { background: var(--accent-soft); border-color: var(--accent) }
+.chip input { accent-color: var(--accent) }
+pre.json { margin: 0; padding: 14px; background: var(--sunken); border-radius: 8px; font-family: var(--font-mono); font-size: .78rem; overflow: auto; max-height: 340px; white-space: pre }
+.log { font-family: var(--font-mono); font-size: .78rem; display: grid; gap: 4px; max-height: 260px; overflow: auto }
+.log div { display: grid; grid-template-columns: 70px minmax(0,1fr); gap: 8px }
+.endpoint { display: grid; grid-template-columns: 64px minmax(0,1fr); gap: 4px 10px; font-family: var(--font-mono); font-size: .8rem }
+.endpoint b { color: var(--accent) }
+.empty { padding: 28px; text-align: center; color: var(--muted) }
+
+@media (max-width: 900px) {
+  .booking, .planning-wrap { grid-template-columns: 1fr }
+  .summary, .detail { position: static }
+  .kpis { grid-template-columns: repeat(2, minmax(0,1fr)) }
+  .grid2 { grid-template-columns: 1fr }
+}
+@media (max-width: 560px) {
+  .form-grid { grid-template-columns: 1fr }
+  .hours-row { grid-template-columns: 80px 50px repeat(2, minmax(0,1fr)) }
+  .hours-row .brk { display: none }
+  h1 { font-size: 1.35rem }
+  .panel { padding: 16px }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .svc, .slot, .day, .staff-card, .opt, .btn { transition: border-color .15s, background-color .15s, box-shadow .15s }
+}
+</style>
+
+<header class="topbar">
+  <div class="wrap">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-ink)" stroke-width="1.8" stroke-linecap="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M8.6 7.6 20 18M8.6 16.4 20 6"/></svg>
+      </div>
+      <div><b id="brand-name">Atelier Mèche</b><small id="brand-tag">Prise de rendez-vous en ligne</small></div>
+    </div>
+    <nav class="nav" aria-label="Interfaces">
+      <a href="#reserver" data-route="reserver">Réserver</a>
+      <a href="#mes-rdv" data-route="mes-rdv">Mes rendez-vous</a>
+      <a href="#pro" data-route="pro">Espace pro · dev</a>
+    </nav>
+    <span class="mode-pill" id="mode-pill" title="Où sont stockées les données">connexion…</span>
+  </div>
+</header>
+<main class="wrap" id="view"></main>
+
+<script>
+/* ============================================================
+   Utilitaires
+   ============================================================ */
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad = n => String(n).padStart(2, '0');
+const toMin = t => { const [h, m] = String(t).split(':').map(Number); return h * 60 + (m || 0); };
+const toHM = m => pad(Math.floor(m / 60)) + ':' + pad(m % 60);
+const ymd = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const parseYmd = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const addDays = (s, n) => { const d = parseYmd(s); d.setDate(d.getDate() + n); return ymd(d); };
+const today = () => ymd(new Date());
+const clone = o => JSON.parse(JSON.stringify(o));
+const euro = n => Number(n || 0).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', minimumFractionDigits: Number(n) % 1 ? 2 : 0 });
+const dur = m => m >= 60 ? Math.floor(m / 60) + ' h' + (m % 60 ? ' ' + pad(m % 60) : '') : m + ' min';
+const fmtDate = s => parseYmd(s).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+const fmtShort = s => parseYmd(s).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+const DAY_NAMES = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
+const rid = () => Math.random().toString(36).slice(2, 10);
+const bookingCode = () => 'AM-' + Array.from({ length: 5 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 32)]).join('');
+const initials = n => String(n || '?').split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+const normPhone = p => String(p || '').replace(/[^\d+]/g, '');
+const STATUS = { confirmed: 'Confirmé', pending: 'En attente', cancelled: 'Annulé', done: 'Honoré', noshow: 'Absent' };
+const badge = s => `<span class="badge st-${esc(s)}">${esc(STATUS[s] || s)}</span>`;
+
+/* ============================================================
+   Configuration par défaut du salon (options coiffeur)
+   ============================================================ */
+const CATEGORIES = [
+  { id: 'femme', label: 'Femme' }, { id: 'homme', label: 'Homme' }, { id: 'enfant', label: 'Enfant' },
+  { id: 'couleur', label: 'Couleur' }, { id: 'technique', label: 'Techniques' }, { id: 'barbe', label: 'Barbe' },
+  { id: 'evenement', label: 'Mariage & événement' }
+];
+const DEFAULT_CONFIG = {
+  salon: { name: 'Atelier Mèche', tagline: 'Coiffeur · Coloriste · Barbier', address: '12 rue des Ciseaux, 69002 Lyon', phone: '04 78 00 00 00', email: 'bonjour@atelier-meche.test' },
+  hours: {
+    0: { open: false, start: '09:00', end: '18:00', breakStart: '', breakEnd: '' },
+    1: { open: false, start: '09:00', end: '19:00', breakStart: '', breakEnd: '' },
+    2: { open: true, start: '09:00', end: '19:00', breakStart: '12:30', breakEnd: '13:30' },
+    3: { open: true, start: '09:00', end: '19:00', breakStart: '12:30', breakEnd: '13:30' },
+    4: { open: true, start: '09:00', end: '20:00', breakStart: '12:30', breakEnd: '13:30' },
+    5: { open: true, start: '09:00', end: '19:00', breakStart: '12:30', breakEnd: '13:30' },
+    6: { open: true, start: '08:30', end: '18:00', breakStart: '', breakEnd: '' }
+  },
+  rules: {
+    slotStep: 15, minNoticeHours: 2, maxDaysAhead: 45, bufferMin: 5, cancelHours: 24,
+    autoConfirm: true, allowNoPreference: true, maxOptions: 3, depositPct: 0, requireEmail: false,
+    lengths: {
+      courts: { label: 'Cheveux courts', hint: 'Au-dessus des oreilles', price: 0, dur: 0 },
+      milongs: { label: 'Mi-longs', hint: 'Jusqu’aux épaules', price: 8, dur: 10 },
+      longs: { label: 'Longs', hint: 'Sous les épaules', price: 15, dur: 20 }
+    }
+  },
+  closures: [{ date: '2026-12-25', label: 'Noël' }, { date: '2027-01-01', label: 'Jour de l’an' }],
+  services: [
+    { id: 'f-cb', cat: 'femme', name: 'Coupe + brushing', desc: 'Diagnostic, shampoing, coupe et mise en forme.', duration: 60, price: 52, length: true, active: true },
+    { id: 'f-sb', cat: 'femme', name: 'Shampoing + brushing', desc: 'Lissé, wavy ou volume.', duration: 40, price: 32, length: true, active: true },
+    { id: 'f-c', cat: 'femme', name: 'Coupe seule (séchage naturel)', desc: 'Sans brushing.', duration: 40, price: 40, length: true, active: true },
+    { id: 'f-ch', cat: 'femme', name: 'Chignon / attache', desc: 'Pour une soirée ou un événement.', duration: 50, price: 55, length: true, active: true },
+    { id: 'h-c', cat: 'homme', name: 'Coupe homme', desc: 'Shampoing, coupe ciseaux ou tondeuse, coiffage.', duration: 30, price: 26, length: false, active: true },
+    { id: 'h-f', cat: 'homme', name: 'Dégradé américain (fade)', desc: 'Contours au rasoir.', duration: 40, price: 30, length: false, active: true },
+    { id: 'h-cb', cat: 'homme', name: 'Coupe + taille de barbe', desc: 'Le duo complet.', duration: 45, price: 38, length: false, active: true },
+    { id: 'e-c', cat: 'enfant', name: 'Coupe enfant (−12 ans)', desc: 'Shampoing et coupe.', duration: 20, price: 16, length: false, active: true },
+    { id: 'e-a', cat: 'enfant', name: 'Coupe ado (12–16 ans)', desc: '', duration: 30, price: 21, length: false, active: true },
+    { id: 'c-r', cat: 'couleur', name: 'Couleur racines', desc: 'Repousse jusqu’à 2 cm, sans ammoniaque sur demande.', duration: 75, price: 48, length: false, active: true },
+    { id: 'c-t', cat: 'couleur', name: 'Couleur complète', desc: 'Racines et longueurs.', duration: 90, price: 62, length: true, active: true },
+    { id: 'c-b', cat: 'couleur', name: 'Balayage', desc: 'Éclaircissement à main levée, effet naturel.', duration: 150, price: 95, length: true, active: true },
+    { id: 'c-m', cat: 'couleur', name: 'Mèches papillote', desc: 'Éclaircissement précis, du fin au marqué.', duration: 120, price: 85, length: true, active: true },
+    { id: 'c-o', cat: 'couleur', name: 'Ombré / tie & dye', desc: 'Dégradé de couleur racines → pointes.', duration: 150, price: 110, length: true, active: true },
+    { id: 't-l', cat: 'technique', name: 'Lissage brésilien', desc: 'Kératine, tenue 3 à 5 mois.', duration: 180, price: 180, length: true, active: true },
+    { id: 't-p', cat: 'technique', name: 'Permanente', desc: 'Boucles ou volume racines.', duration: 120, price: 75, length: true, active: true },
+    { id: 'b-t', cat: 'barbe', name: 'Taille de barbe', desc: 'Tondeuse, ciseaux et contours.', duration: 20, price: 18, length: false, active: true },
+    { id: 'b-r', cat: 'barbe', name: 'Rasage traditionnel', desc: 'Serviette chaude, coupe-chou, baume.', duration: 30, price: 28, length: false, active: true },
+    { id: 'v-e', cat: 'evenement', name: 'Essai coiffure mariée', desc: 'Prévoir photos d’inspiration et accessoires.', duration: 90, price: 85, length: false, active: true }
+  ],
+  options: [
+    { id: 'o-soin', name: 'Soin profond kératine', desc: 'Répare les longueurs abîmées.', duration: 15, price: 12, active: true },
+    { id: 'o-masque', name: 'Masque hydratant', desc: 'Pose sous vapeur.', duration: 10, price: 8, active: true },
+    { id: 'o-massage', name: 'Massage crânien', desc: '10 minutes de détente au bac.', duration: 10, price: 7, active: true },
+    { id: 'o-gloss', name: 'Patine / gloss', desc: 'Neutralise le jaune, ajoute de la brillance.', duration: 20, price: 18, active: true },
+    { id: 'o-ampoule', name: 'Ampoule anti-chute', desc: '', duration: 5, price: 6, active: true },
+    { id: 'o-plex', name: 'Protecteur Plex (couleur)', desc: 'Protège la fibre pendant l’éclaircissement.', duration: 0, price: 15, active: true },
+    { id: 'o-sourcils', name: 'Restructuration sourcils', desc: 'À la pince et au fil.', duration: 10, price: 9, active: true }
+  ],
+  staff: [
+    { id: 's-camille', name: 'Camille', role: 'Coloriste', color: '#B4547A', days: [2, 3, 4, 5, 6], cats: ['femme', 'couleur', 'technique', 'evenement', 'enfant'], active: true },
+    { id: 's-yanis', name: 'Yanis', role: 'Barbier', color: '#3C6FB0', days: [2, 3, 5, 6], cats: ['homme', 'barbe', 'enfant'], active: true },
+    { id: 's-lea', name: 'Léa', role: 'Coiffeuse mixte', color: '#C07A1E', days: [3, 4, 5, 6], cats: ['femme', 'homme', 'enfant', 'technique'], active: true }
+  ]
+};
+function normalizeConfig(c) {
+  const d = clone(DEFAULT_CONFIG);
+  if (!c || typeof c !== 'object') return d;
+  return {
+    salon: { ...d.salon, ...(c.salon || {}) },
+    hours: { ...d.hours, ...(c.hours || {}) },
+    rules: { ...d.rules, ...(c.rules || {}), lengths: { ...d.rules.lengths, ...((c.rules || {}).lengths || {}) } },
+    closures: Array.isArray(c.closures) ? c.closures : d.closures,
+    services: Array.isArray(c.services) ? c.services : d.services,
+    options: Array.isArray(c.options) ? c.options : d.options,
+    staff: Array.isArray(c.staff) ? c.staff : d.staff
+  };
+}
+
+/* ============================================================
+   Stockage : API Node  |  base partagée claude.ai  |  navigateur
+   ============================================================ */
+const LS_KEY = 'atelier-meche-rdv-v1';
+const Store = {
+  mode: 'init', config: clone(DEFAULT_CONFIG), bookings: [], loading: true, canEditConfig: true, canBook: true, error: '',
+  log: [],
+  note(msg) { this.log.unshift({ t: new Date().toLocaleTimeString('fr-FR'), msg }); this.log.length = Math.min(this.log.length, 50); },
+  async init() {
+    if (window.claude && typeof window.claude.use === 'function') {
+      try { const db = await window.claude.use('db'); if (db) return this.initDb(db); } catch (e) {}
+    } else if (location.protocol.startsWith('http')) {
+      try { const r = await fetch('api/state', { cache: 'no-store' }); if (r.ok) return this.initApi(await r.json()); } catch (e) {}
+    }
+    this.initLocal();
+  },
+  /* --- navigateur (localStorage) --- */
+  initLocal() {
+    this.mode = 'local';
+    try { const raw = localStorage.getItem(LS_KEY); if (raw) { const s = JSON.parse(raw); this.config = normalizeConfig(s.config); this.bookings = s.bookings || []; } } catch (e) {}
+    window.addEventListener('storage', e => { if (e.key === LS_KEY) { try { const s = JSON.parse(e.newValue); this.config = normalizeConfig(s.config); this.bookings = s.bookings || []; render(); } catch (x) {} } });
+    this.loading = false; this.note('Stockage local (navigateur) prêt'); render();
+  },
+  persistLocal() { try { localStorage.setItem(LS_KEY, JSON.stringify({ config: this.config, bookings: this.bookings })); } catch (e) {} },
+  /* --- API REST (server.js) --- */
+  initApi(state) {
+    this.mode = 'api'; this.applyApi(state); this.loading = false; this.note('Connecté à l’API REST /api'); render();
+    setInterval(async () => {
+      try { const r = await fetch('api/state', { cache: 'no-store' }); if (r.ok) { const s = await r.json(); if (JSON.stringify(s) !== this._last) { this.applyApi(s); render(); } } } catch (e) {}
+    }, 5000);
+  },
+  applyApi(s) { this._last = JSON.stringify(s); this.config = normalizeConfig(s.config); this.bookings = s.bookings || []; },
+  async api(method, url, body) {
+    const r = await fetch(url, { method, headers: { 'content-type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) { const e = new Error(j.message || 'Erreur serveur'); e.code = j.error || r.status; throw e; }
+    return j;
+  },
+  /* --- base partagée claude.ai (capability db) --- */
+  async initDb(db) {
+    this.mode = 'db'; this.db = db;
+    try {
+      const user = await window.claude.use('user');
+      if (user) {
+        this.canEditConfig = (await user.canEdit()) ?? true;
+        const w = await user.can('data.write'); this.canBook = w === null ? true : !!w;
+      }
+    } catch (e) {}
+    const timer = setTimeout(() => { if (this.loading) { this.error = 'Les données partagées ne répondent pas encore. Les créneaux affichés peuvent être incomplets.'; render(); } }, 10000);
+    let gotCfg = false, gotBk = false;
+    const done = () => { if (gotCfg && gotBk && this.loading) { this.loading = false; this.error = ''; clearTimeout(timer); this.note('Base partagée claude.ai synchronisée'); } };
+    db.doc('salon/config').onSnapshot(s => {
+      this.config = normalizeConfig(s.exists ? (s.data() || {}).config : null);
+      if (!s.metadata.fromCache) { gotCfg = true; done(); } render();
+    }, e => { this.error = 'Configuration indisponible (' + e.code + ').'; render(); });
+    db.collection('bookings').onSnapshot(q => {
+      this.bookings = q.docs.map(d => d.data());
+      if (!q.metadata.fromCache) { gotBk = true; done(); } render();
+    }, e => { this.error = 'Réservations indisponibles (' + e.code + ').'; this.loading = false; render(); });
+  },
+  _cfgChain: Promise.resolve(),
+  /* --- opérations communes --- */
+  async saveConfig(cfg, what) {
+    this.config = normalizeConfig(cfg);
+    this.note('Config modifiée : ' + (what || 'paramètres'));
+    if (this.mode === 'local') { this.persistLocal(); render(); return; }
+    if (this.mode === 'api') { await this.api('PUT', 'api/config', { config: this.config }); return; }
+    if (this.mode === 'db') {
+      const snapshot = clone(this.config);
+      this._cfgChain = this._cfgChain.then(() => this.db.doc('salon/config').set({ config: snapshot, updatedAt: new Date().toISOString() }))
+        .catch(e => { this.error = e.code === 'invalid_argument' ? 'Seuls les éditeurs de cette page peuvent modifier la configuration.' : 'Enregistrement impossible (' + e.code + ').'; this.canEditConfig = false; render(); });
+      render(); return this._cfgChain;
+    }
+  },
+  async addBooking(b) {
+    // revérifie le créneau juste avant d'écrire
+    if (!slotStillFree(this.config, this.bookings, b)) { const e = new Error('Ce créneau vient d’être pris.'); e.code = 'slot_taken'; throw e; }
+    if (this.mode === 'api') { const r = await this.api('POST', 'api/bookings', b); this.bookings.push(r.booking || b); }
+    else if (this.mode === 'db') {
+      try { await this.db.collection('bookings').doc(b.id).set(b); }
+      catch (e) { const er = new Error(e.code === 'invalid_argument' ? 'Votre accès à cette page ne permet pas de réserver.' : 'Réservation impossible (' + e.code + ').'); er.code = e.code; throw er; }
+    } else { this.bookings.push(b); this.persistLocal(); }
+    this.note(`RDV ${b.id} créé · ${b.date} ${b.time} · ${b.client.name}`);
+  },
+  async updateBooking(id, patch) {
+    const b = this.bookings.find(x => x.id === id); if (!b) return;
+    patch = { ...patch, updatedAt: new Date().toISOString() };
+    if (this.mode === 'api') await this.api('PATCH', 'api/bookings/' + encodeURIComponent(id), patch);
+    else if (this.mode === 'db') await this.db.doc('bookings/' + id).update(patch);
+    Object.assign(b, patch);
+    if (this.mode === 'local') this.persistLocal();
+    this.note(`RDV ${id} → ${patch.status ? STATUS[patch.status] : 'modifié'}`);
+    render();
+  },
+  async removeBookings(filterFn, label) {
+    const ids = this.bookings.filter(filterFn).map(b => b.id);
+    if (this.mode === 'api') await this.api('POST', 'api/bookings/delete', { ids });
+    else if (this.mode === 'db') { for (const id of ids) await this.db.doc('bookings/' + id).delete(); }
+    this.bookings = this.bookings.filter(b => !ids.includes(b.id));
+    if (this.mode === 'local') this.persistLocal();
+    this.note(`${ids.length} RDV supprimé(s) (${label})`); render();
+  },
+  async importAll(data) {
+    const cfg = normalizeConfig(data.config); const bks = Array.isArray(data.bookings) ? data.bookings : [];
+    if (this.mode === 'api') { await this.api('PUT', 'api/state', { config: cfg, bookings: bks }); this.config = cfg; this.bookings = bks; }
+    else if (this.mode === 'db') {
+      await this.saveConfig(cfg, 'import');
+      for (const b of bks) if (b && b.id) await this.db.collection('bookings').doc(String(b.id)).set(b);
+    } else { this.config = cfg; this.bookings = bks; this.persistLocal(); }
+    this.note(`Import : config + ${bks.length} RDV`); render();
+  }
+};
+
+/* ============================================================
+   Moteur de disponibilités
+   ============================================================ */
+const C = () => Store.config;
+const svcById = id => C().services.find(s => s.id === id);
+const optById = id => C().options.find(o => o.id === id);
+const staffById = id => C().staff.find(s => s.id === id);
+function quote(sel) {
+  const s = svcById(sel.serviceId); if (!s) return null;
+  const lines = [{ label: s.name, price: +s.price, dur: +s.duration }];
+  if (s.length && sel.length) { const L = C().rules.lengths[sel.length]; if (L && (+L.price || +L.dur)) lines.push({ label: 'Supplément ' + L.label.toLowerCase(), price: +L.price, dur: +L.dur }); }
+  for (const id of sel.optionIds || []) { const o = optById(id); if (o) lines.push({ label: o.name, price: +o.price, dur: +o.duration }); }
+  return { lines, price: lines.reduce((a, l) => a + l.price, 0), duration: lines.reduce((a, l) => a + l.dur, 0) };
+}
+function dayInfo(date) {
+  const cl = (C().closures || []).find(c => c.date === date);
+  if (cl) return { open: false, reason: cl.label || 'Fermeture exceptionnelle' };
+  const h = C().hours[parseYmd(date).getDay()];
+  if (!h || !h.open) return { open: false, reason: 'Fermé' };
+  return { open: true, ...h };
+}
+function staffForService(s) { return s ? C().staff.filter(p => p.active !== false && (p.cats || []).includes(s.cat)) : []; }
+function busyFor(bookings, staffId, date, exceptId) {
+  return bookings.filter(b => b.staffId === staffId && b.date === date && b.status !== 'cancelled' && b.id !== exceptId)
+    .map(b => [toMin(b.time), toMin(b.time) + (+b.duration)]);
+}
+function freeSlots(date, staffIds, duration, bookings = Store.bookings) {
+  const d = dayInfo(date); if (!d.open || !duration) return [];
+  const R = C().rules, step = Math.max(5, +R.slotStep || 15), buf = +R.bufferMin || 0;
+  const start = toMin(d.start), end = toMin(d.end);
+  const brk = d.breakStart && d.breakEnd ? [toMin(d.breakStart), toMin(d.breakEnd)] : null;
+  const minAt = Date.now() + (+R.minNoticeHours || 0) * 3600e3;
+  const dow = parseYmd(date).getDay();
+  const pool = staffIds.map(id => staffById(id)).filter(p => p && (p.days || []).includes(dow)).map(p => ({ id: p.id, busy: busyFor(bookings, p.id, date) }));
+  const out = [];
+  for (let t = start; t + duration <= end; t += step) {
+    const at = parseYmd(date); at.setMinutes(t); if (at.getTime() < minAt) continue;
+    if (brk && t < brk[1] && t + duration > brk[0]) continue;
+    const free = pool.filter(p => p.busy.every(([a, b]) => t + duration + buf <= a || t >= b + buf)).map(p => p.id);
+    if (free.length) out.push({ time: toHM(t), staffIds: free });
+  }
+  return out;
+}
+function slotStillFree(cfg, bookings, b) {
+  const t = toMin(b.time), buf = +cfg.rules.bufferMin || 0;
+  return busyFor(bookings, b.staffId, b.date, b.id).every(([a, e]) => t + (+b.duration) + buf <= a || t >= e + buf);
+}
+function pickStaff(ids, date) { // sans préférence : le moins chargé ce jour-là
+  const load = id => Store.bookings.filter(b => b.staffId === id && b.date === date && b.status !== 'cancelled').reduce((a, b) => a + (+b.duration), 0);
+  return ids.slice().sort((a, b) => load(a) - load(b))[0];
+}
+function canCancel(b) {
+  if (!['confirmed', 'pending'].includes(b.status)) return false;
+  const at = parseYmd(b.date); at.setMinutes(toMin(b.time));
+  return at.getTime() - Date.now() >= (+C().rules.cancelHours || 0) * 3600e3;
+}
+
+/* ============================================================
+   État des interfaces
+   ============================================================ */
+const G = { step: 1, cat: 'femme', serviceId: null, length: 'courts', optionIds: [], staffId: 'any', date: null, time: null,
+  client: { name: '', phone: '', email: '', note: '', first: false, consent: false }, error: '', busy: false, done: null };
+const M = { code: '', phone: '', result: null, error: '', confirmCancel: false };
+const P = { tab: 'planning', date: today(), filter: 'upcoming', status: 'all', q: '', sel: null, confirm: null, importText: '', importErr: '', flash: '' };
+
+function route() { const h = location.hash.slice(1); return ['reserver', 'mes-rdv', 'pro'].includes(h) ? h : 'reserver'; }
+
+/* ============================================================
+   Rendu
+   ============================================================ */
+function render() {
+  const a = document.activeElement, id = a && a.id, sel = a && 'selectionStart' in a ? [a.selectionStart, a.selectionEnd] : null;
+  const r = route();
+  document.querySelectorAll('.nav a').forEach(x => { if (x.dataset.route === r) x.setAttribute('aria-current', 'page'); else x.removeAttribute('aria-current'); });
+  document.getElementById('brand-name').textContent = C().salon.name;
+  document.getElementById('brand-tag').textContent = C().salon.tagline || 'Prise de rendez-vous en ligne';
+  const pill = { init: 'connexion…', local: 'données : navigateur', api: 'données : API Node', db: 'données : partagées' }[Store.mode];
+  document.getElementById('mode-pill').textContent = pill;
+  const v = document.getElementById('view');
+  v.innerHTML = (Store.error ? `<p class="notice err" style="margin-bottom:16px">${esc(Store.error)}</p>` : '') +
+    (r === 'pro' ? viewPro() : r === 'mes-rdv' ? viewMine() : viewBooking());
+  if (id) { const el = document.getElementById(id); if (el) { el.focus(); if (sel && 'setSelectionRange' in el) try { el.setSelectionRange(sel[0], sel[1]); } catch (e) {} } }
+}
+
+/* ---------------- Interface invitée : réservation ---------------- */
+const STEPS = ['Prestation', 'Personnaliser', 'Coiffeur', 'Date & heure', 'Coordonnées'];
+function viewBooking() {
+  if (G.done) return viewConfirmation(G.done);
+  const s = svcById(G.serviceId);
+  const steps = `<ol class="steps">${STEPS.map((n, i) => {
+    const k = i + 1, cls = k === G.step ? 'on' : k < G.step ? 'done' : '';
+    return `<li class="${cls}" ${k < G.step ? `data-act="goto" data-step="${k}" role="button" tabindex="0"` : ''}><i>${k < G.step ? '✓' : k}</i>${n}</li>`;
+  }).join('')}</ol>`;
+  let body = '';
+  if (G.step === 1) body = stepService();
+  else if (G.step === 2) body = stepCustomize(s);
+  else if (G.step === 3) body = stepStaff(s);
+  else if (G.step === 4) body = stepDate(s);
+  else body = stepClient(s);
+  return `<div class="booking"><div style="min-width:0">${steps}<section class="card panel">${body}</section></div>${summary()}</div>`;
+}
+function stepService() {
+  const cats = CATEGORIES.filter(c => C().services.some(s => s.active !== false && s.cat === c.id));
+  if (!cats.some(c => c.id === G.cat) && cats[0]) G.cat = cats[0].id;
+  const list = C().services.filter(s => s.active !== false && s.cat === G.cat);
+  return `<div class="panel-head"><h2>Choisissez une prestation</h2><p class="muted">Les prix sont TTC. Les prestations marquées « dès » varient selon la longueur de vos cheveux.</p></div>
+  <div class="tabs" role="toolbar" aria-label="Catégories">${cats.map(c => `<button class="tab" data-act="cat" data-id="${c.id}" aria-pressed="${c.id === G.cat}">${esc(c.label)}</button>`).join('')}</div>
+  <div class="svc-list">${list.map(s => `<button class="svc" data-act="svc" data-id="${esc(s.id)}" aria-pressed="${s.id === G.serviceId}">
+    <span class="name">${esc(s.name)}</span><span class="price">${s.length ? 'dès ' : ''}${euro(s.price)}</span>
+    <span class="desc">${esc(s.desc || '')}</span><span class="dur">${dur(+s.duration)}</span></button>`).join('') || '<p class="empty">Aucune prestation dans cette catégorie.</p>'}</div>`;
+}
+function stepCustomize(s) {
+  const R = C().rules, opts = C().options.filter(o => o.active !== false), max = +R.maxOptions || 0;
+  return `<div class="panel-head"><h2>Personnalisez « ${esc(s.name)} »</h2><p class="muted">Facultatif : ajoutez un soin ou une option.</p></div>
+  ${s.length ? `<div class="field"><span>Longueur de vos cheveux</span><div class="seg">${Object.entries(R.lengths).map(([k, L]) => `<button data-act="len" data-id="${k}" aria-pressed="${G.length === k}"><b>${esc(L.label)}</b><small>${esc(L.hint || '')}${+L.price ? ` · +${euro(L.price)}` : ''}${+L.dur ? ` · +${L.dur} min` : ''}</small></button>`).join('')}</div></div>` : ''}
+  ${opts.length ? `<div class="field"><span>Options${max ? ` (${max} maximum)` : ''}</span><div class="opt-list">${opts.map(o => {
+    const on = G.optionIds.includes(o.id), dis = !on && max && G.optionIds.length >= max;
+    return `<label class="opt"><input type="checkbox" data-act="opt" data-id="${esc(o.id)}" ${on ? 'checked' : ''} ${dis ? 'disabled' : ''}><span><b>${esc(o.name)}</b><small>${esc(o.desc || '')}</small></span><span class="num muted">+${euro(o.price)}${+o.duration ? ` · ${o.duration} min` : ''}</span></label>`;
+  }).join('')}</div></div>` : ''}
+  <div class="actions"><button class="btn" data-act="goto" data-step="1">Retour</button><button class="btn primary" data-act="goto" data-step="3">Continuer</button></div>`;
+}
+function stepStaff(s) {
+  const team = staffForService(s);
+  const card = (id, name, role, color, extra) => `<button class="staff-card" data-act="staff" data-id="${esc(id)}" aria-pressed="${G.staffId === id}">
+    <span class="avatar" style="background:${esc(color)}">${esc(id === 'any' ? '★' : initials(name))}</span><span><b>${esc(name)}</b><br><small class="muted">${esc(role)}</small></span>${extra || ''}</button>`;
+  return `<div class="panel-head"><h2>Avec qui ?</h2><p class="muted">${team.length} coiffeur${team.length > 1 ? 's' : ''} réalise${team.length > 1 ? 'nt' : ''} cette prestation.</p></div>
+  <div class="staff-grid">
+    ${C().rules.allowNoPreference ? card('any', 'Sans préférence', 'Le premier disponible', 'var(--accent)') : ''}
+    ${team.map(p => card(p.id, p.name, p.role, p.color, `<small class="muted">${(p.days || []).slice().sort((a, b) => (a || 7) - (b || 7)).map(d => DAY_NAMES[d].slice(0, 3)).join(' · ')}</small>`)).join('')}
+  </div>
+  ${team.length ? '' : '<p class="notice">Aucun coiffeur n’est configuré pour cette prestation.</p>'}
+  <div class="actions"><button class="btn" data-act="goto" data-step="2">Retour</button><button class="btn primary" data-act="goto" data-step="4" ${(G.staffId === 'any' && C().rules.allowNoPreference) || team.some(p => p.id === G.staffId) ? '' : 'disabled'}>Voir les disponibilités</button></div>`;
+}
+function guestStaffIds(s) { return G.staffId === 'any' ? staffForService(s).map(p => p.id) : [G.staffId]; }
+function stepDate(s) {
+  const q = quote(G), ids = guestStaffIds(s), n = +C().rules.maxDaysAhead || 30;
+  const days = []; for (let i = 0; i < n; i++) { const d = addDays(today(), i); const info = dayInfo(d); days.push({ d, info, slots: info.open ? freeSlots(d, ids, q.duration) : [] }); }
+  if (!G.date || !days.some(x => x.d === G.date && x.slots.length)) { const f = days.find(x => x.slots.length); G.date = f ? f.d : null; G.time = null; }
+  const cur = days.find(x => x.d === G.date);
+  const groups = [['Matin', 0, 720], ['Après-midi', 720, 1020], ['Soirée', 1020, 1440]];
+  return `<div class="panel-head"><h2>Choisissez votre créneau</h2><p class="muted">Durée estimée : <b>${dur(q.duration)}</b>. Réservation au plus tard ${C().rules.minNoticeHours} h à l’avance.</p></div>
+  ${Store.loading ? '<p class="notice info">Chargement des disponibilités…</p>' : ''}
+  <div class="days" role="toolbar" aria-label="Jours">${days.map(x => {
+    const dt = parseYmd(x.d);
+    return `<button class="day" data-act="date" data-id="${x.d}" aria-pressed="${x.d === G.date}" ${x.slots.length ? '' : 'disabled'} title="${esc(x.info.open ? x.slots.length + ' créneaux' : x.info.reason)}">
+      <span>${dt.toLocaleDateString('fr-FR', { weekday: 'short' })}</span><b>${dt.getDate()}</b><small>${x.info.open ? (x.slots.length ? x.slots.length + ' dispo' : 'complet') : esc(x.info.reason.length > 8 ? 'fermé' : x.info.reason.toLowerCase())}</small></button>`;
+  }).join('')}</div>
+  ${cur ? `<h3 style="text-transform:capitalize">${fmtDate(cur.d)}</h3>${groups.map(([label, a, b]) => {
+    const sl = cur.slots.filter(x => toMin(x.time) >= a && toMin(x.time) < b);
+    return sl.length ? `<div class="slot-group"><span class="label">${label}</span><div class="slots">${sl.map(x => `<button class="slot" data-act="time" data-id="${x.time}" aria-pressed="${x.time === G.time}">${x.time}</button>`).join('')}</div></div>` : '';
+  }).join('')}` : `<p class="notice">Aucun créneau libre sur les ${n} prochains jours pour cette sélection. Essayez « Sans préférence » ou une autre prestation.</p>`}
+  <div class="actions"><button class="btn" data-act="goto" data-step="3">Retour</button><button class="btn primary" data-act="goto" data-step="5" ${G.time ? '' : 'disabled'}>Continuer</button></div>`;
+}
+function stepClient(s) {
+  const c = G.client, R = C().rules, q = quote(G);
+  return `<div class="panel-head"><h2>Vos coordonnées</h2><p class="muted">Pour vous confirmer le rendez-vous et vous prévenir en cas d’imprévu.</p></div>
+  <form id="client-form" class="form-grid" novalidate>
+    <label class="field full"><span>Nom et prénom *</span><input id="c-name" type="text" autocomplete="name" data-bind="name" value="${esc(c.name)}" required></label>
+    <label class="field"><span>Téléphone mobile *</span><input id="c-phone" type="tel" autocomplete="tel" inputmode="tel" data-bind="phone" value="${esc(c.phone)}" placeholder="06 12 34 56 78" required></label>
+    <label class="field"><span>E-mail${R.requireEmail ? ' *' : ''}</span><input id="c-email" type="email" autocomplete="email" data-bind="email" value="${esc(c.email)}"></label>
+    <label class="field full"><span>Message pour le salon</span><textarea id="c-note" data-bind="note" placeholder="Allergie, photo d’inspiration, couleur actuelle…">${esc(c.note)}</textarea></label>
+    <label class="check full"><input id="c-first" type="checkbox" data-bind="first" ${c.first ? 'checked' : ''}><span>C’est ma première visite au salon</span></label>
+    <label class="check full"><input id="c-consent" type="checkbox" data-bind="consent" ${c.consent ? 'checked' : ''}><span>J’accepte que mes coordonnées soient utilisées pour gérer ce rendez-vous. Annulation gratuite jusqu’à ${R.cancelHours} h avant.</span></label>
+    ${+R.depositPct ? `<p class="notice info full">Un acompte de ${R.depositPct} % (${euro(q.price * R.depositPct / 100)}) sera demandé au salon pour valider ce rendez-vous.</p>` : ''}
+    ${G.error ? `<p class="notice err full">${esc(G.error)}</p>` : ''}
+    <div class="actions full"><button type="button" class="btn" data-act="goto" data-step="4">Retour</button><button type="submit" class="btn primary" ${G.busy ? 'disabled' : ''}>${G.busy ? 'Réservation…' : 'Confirmer le rendez-vous'}</button></div>
+  </form>`;
+}
+function summary() {
+  const s = svcById(G.serviceId), q = s ? quote(G) : null, S = C().salon;
+  const who = G.staffId === 'any' ? 'Sans préférence' : (staffById(G.staffId) || {}).name;
+  return `<aside class="card summary" aria-label="Récapitulatif">
+    <span class="label">Votre rendez-vous</span>
+    ${q ? `<div class="sum-lines">${q.lines.map(l => `<div class="sum-line"><span>${esc(l.label)}</span><span>${euro(l.price)}</span></div>`).join('')}</div>
+      <div class="sum-lines muted">
+        ${G.step > 3 ? `<div class="sum-line"><span>Coiffeur</span><span>${esc(who)}</span></div>` : ''}
+        ${G.date && G.time ? `<div class="sum-line"><span>Quand</span><span style="text-transform:capitalize">${fmtShort(G.date)} · ${G.time}</span></div>` : ''}
+        <div class="sum-line"><span>Durée</span><span>${dur(q.duration)}</span></div>
+      </div>
+      <div class="sum-total"><span>Total estimé</span><b>${euro(q.price)}</b></div>`
+    : '<p class="muted">Sélectionnez une prestation pour voir le prix et la durée.</p>'}
+    <div class="salon-info"><b style="color:var(--ink)">${esc(S.name)}</b><span>${esc(S.address)}</span><span class="num">${esc(S.phone)}</span><span>Règlement sur place · CB, espèces</span></div>
+  </aside>`;
+}
+function viewConfirmation(b) {
+  const p = staffById(b.staffId) || { name: '—' };
+  return `<section class="card ticket" style="max-width:640px;margin:0 auto">
+    <span class="badge st-${b.status}">${b.status === 'pending' ? 'Demande envoyée, en attente de validation' : 'Rendez-vous confirmé'}</span>
+    <h1>Merci ${esc(b.client.name.split(' ')[0])}, à bientôt !</h1>
+    <div><span class="label">Numéro de réservation</span><div class="ticket-code">${esc(b.id)}</div></div>
+    <dl class="kv">
+      <dt>Date</dt><dd style="text-transform:capitalize">${fmtDate(b.date)} à ${b.time}</dd>
+      <dt>Prestation</dt><dd>${esc(b.serviceName)}${b.options.length ? ' + ' + b.options.map(o => esc(o.name)).join(', ') : ''}</dd>
+      <dt>Coiffeur</dt><dd>${esc(p.name)}</dd>
+      <dt>Durée</dt><dd>${dur(b.duration)}</dd>
+      <dt>Total estimé</dt><dd class="num">${euro(b.price)}</dd>
+      <dt>Salon</dt><dd>${esc(C().salon.name)} · ${esc(C().salon.address)}</dd>
+    </dl>
+    <p class="muted">Gardez ce numéro : il permet de retrouver ou d’annuler le rendez-vous dans « Mes rendez-vous » (annulation gratuite jusqu’à ${C().rules.cancelHours} h avant).</p>
+    <div class="actions" style="width:100%"><a class="btn" href="#mes-rdv" data-act="lookup-mine" data-id="${esc(b.id)}">Gérer ce rendez-vous</a><button class="btn primary" data-act="restart">Nouvelle réservation</button></div>
+  </section>`;
+}
+
+/* ---------------- Interface invitée : mes rendez-vous ---------------- */
+function viewMine() {
+  const b = M.result ? Store.bookings.find(x => x.id === M.result) : null;
+  return `<section class="card panel" style="max-width:640px;margin:0 auto">
+    <div class="panel-head"><h1>Mes rendez-vous</h1><p class="muted">Retrouvez un rendez-vous avec son numéro et votre téléphone.</p></div>
+    <form id="mine-form" class="form-grid">
+      <label class="field"><span>Numéro de réservation</span><input id="m-code" type="text" data-mbind="code" value="${esc(M.code)}" placeholder="AM-XXXXX" autocapitalize="characters"></label>
+      <label class="field"><span>Téléphone</span><input id="m-phone" type="tel" data-mbind="phone" value="${esc(M.phone)}"></label>
+      <div class="actions full"><span></span><button class="btn primary" type="submit">Rechercher</button></div>
+    </form>
+    ${M.error ? `<p class="notice err">${esc(M.error)}</p>` : ''}
+    ${b ? `<div class="card" style="padding:16px;display:grid;gap:12px;background:var(--sunken)">
+      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><b class="mono">${esc(b.id)}</b>${badge(b.status)}</div>
+      <dl class="kv"><dt>Date</dt><dd style="text-transform:capitalize">${fmtDate(b.date)} à ${b.time}</dd><dt>Prestation</dt><dd>${esc(b.serviceName)}</dd>
+      <dt>Coiffeur</dt><dd>${esc((staffById(b.staffId) || {}).name || '—')}</dd><dt>Total</dt><dd class="num">${euro(b.price)}</dd></dl>
+      ${canCancel(b) ? (M.confirmCancel
+        ? `<div class="notice">Annuler ce rendez-vous ? <div class="actions" style="margin-top:8px"><button class="btn sm" data-act="m-cancel-no">Non, le garder</button><button class="btn sm danger" data-act="m-cancel-yes">Oui, annuler</button></div></div>`
+        : `<div><button class="btn danger" data-act="m-cancel">Annuler le rendez-vous</button></div>`)
+      : (['confirmed', 'pending'].includes(b.status) ? `<p class="muted">L’annulation en ligne n’est plus possible à moins de ${C().rules.cancelHours} h. Appelez le salon au ${esc(C().salon.phone)}.</p>` : '')}
+    </div>` : ''}
+  </section>`;
+}
+
+/* ---------------- Interface pro / développeur ---------------- */
+const PRO_TABS = [['planning', 'Planning'], ['rdv', 'Réservations'], ['catalogue', 'Prestations & options'], ['equipe', 'Équipe'], ['regles', 'Horaires & règles'], ['dev', 'Développeur']];
+function viewPro() {
+  const t = today(), wkEnd = addDays(t, 6), live = Store.bookings.filter(b => b.status !== 'cancelled');
+  const todayN = live.filter(b => b.date === t).length;
+  const week = live.filter(b => b.date >= t && b.date <= wkEnd);
+  const pending = Store.bookings.filter(b => b.status === 'pending' && b.date >= t).length;
+  return `<div class="pro-head"><div><span class="label">Espace pro · interface de test</span><h1>${esc(C().salon.name)}</h1></div>
+    <div class="toolbar" style="margin:0"><a class="btn" href="#reserver">+ RDV au comptoir</a></div></div>
+  ${!Store.canEditConfig ? '<p class="notice" style="margin-bottom:14px">Vous consultez cette page sans droit d’édition : la configuration est en lecture seule.</p>' : ''}
+  ${P.flash ? `<p class="notice ok" style="margin-bottom:14px">${esc(P.flash)}</p>` : ''}
+  <div class="kpis">
+    <div class="card kpi"><span class="label">Aujourd’hui</span><b>${todayN}</b><span class="muted">rendez-vous</span></div>
+    <div class="card kpi"><span class="label">7 prochains jours</span><b>${week.length}</b><span class="muted">rendez-vous</span></div>
+    <div class="card kpi"><span class="label">CA prévu 7 j</span><b>${euro(week.reduce((a, b) => a + (+b.price || 0), 0))}</b><span class="muted">estimation TTC</span></div>
+    <div class="card kpi"><span class="label">À valider</span><b style="color:${pending ? 'var(--warn)' : 'inherit'}">${pending}</b><span class="muted">demandes en attente</span></div>
+  </div>
+  <div class="subnav" role="tablist">${PRO_TABS.map(([k, l]) => `<button role="tab" data-act="ptab" data-id="${k}" aria-selected="${P.tab === k}">${l}</button>`).join('')}</div>
+  ${({ planning: proPlanning, rdv: proList, catalogue: proCatalogue, equipe: proTeam, regles: proRules, dev: proDev })[P.tab]()}`;
+}
+function proPlanning() {
+  const d = P.date, info = dayInfo(d), team = C().staff.filter(p => p.active !== false);
+  const dow = parseYmd(d).getDay();
+  const hrs = WEEK_ORDER.map(k => C().hours[k]).filter(h => h && h.open);
+  const gStart = Math.floor(Math.min(...hrs.map(h => toMin(h.start)), 540) / 60) * 60;
+  const gEnd = Math.ceil(Math.max(...hrs.map(h => toMin(h.end)), 1140) / 60) * 60;
+  const ppm = 1.1, H = (gEnd - gStart) * ppm;
+  const dayB = Store.bookings.filter(b => b.date === d && b.status !== 'cancelled');
+  const lines = []; for (let m = gStart; m <= gEnd; m += 30) lines.push(`<div class="pl-line ${m % 60 ? 'half' : ''}" style="top:${(m - gStart) * ppm}px"></div>`);
+  const now = new Date(), nowM = now.getHours() * 60 + now.getMinutes();
+  const nowLine = d === today() && nowM > gStart && nowM < gEnd ? `<div class="pl-now" style="top:${(nowM - gStart) * ppm}px"></div>` : '';
+  const off = (a, b, label) => b > a ? `<div class="pl-off" style="top:${(a - gStart) * ppm}px;height:${(b - a) * ppm}px">${label ? `<span>${esc(label)}</span>` : ''}</div>` : '';
+  const cols = team.map(p => {
+    let o = '';
+    if (!info.open) o = off(gStart, gEnd, info.reason);
+    else if (!(p.days || []).includes(dow)) o = off(gStart, gEnd, 'Repos');
+    else { o = off(gStart, toMin(info.start)) + off(toMin(info.end), gEnd) + (info.breakStart && info.breakEnd ? off(toMin(info.breakStart), toMin(info.breakEnd), 'Pause') : ''); }
+    const bks = dayB.filter(b => b.staffId === p.id).map(b => {
+      const top = (toMin(b.time) - gStart) * ppm, h = Math.max(22, b.duration * ppm - 2);
+      return `<button class="pl-bk ${esc(b.status)}" style="top:${top}px;height:${h}px;border-left-color:${esc(p.color)}" data-act="psel" data-id="${esc(b.id)}" aria-pressed="${P.sel === b.id}">
+        <b>${b.time} · ${esc(b.client.name)}</b>${esc(b.serviceName)}${b.status === 'pending' ? ' · à valider' : ''}</button>`;
+    }).join('');
+    return `<div class="pl-col" style="height:${H}px">${lines.join('')}${o}${bks}${nowLine}</div>`;
+  });
+  const times = []; for (let m = gStart; m <= gEnd; m += 60) times.push(`<span style="top:${(m - gStart) * ppm}px">${toHM(m)}</span>`);
+  const sel = P.sel && Store.bookings.find(b => b.id === P.sel);
+  return `<div class="toolbar">
+    <button class="btn" data-act="pday" data-n="-1" aria-label="Jour précédent">←</button>
+    <input id="p-date" type="date" value="${d}" data-act="pdate" style="width:auto">
+    <button class="btn" data-act="pday" data-n="1" aria-label="Jour suivant">→</button>
+    <button class="btn ghost" data-act="ptoday">Aujourd’hui</button>
+    <b style="text-transform:capitalize">${fmtDate(d)}</b>
+    <span class="muted">${info.open ? `${info.start}–${info.end} · ${dayB.length} RDV` : esc(info.reason)}</span>
+  </div>
+  <div class="planning-wrap">
+    <div class="card planning"><div class="pl-grid" style="grid-template-columns:52px repeat(${team.length || 1}, minmax(150px,1fr))">
+      <div class="pl-head"></div>${team.map(p => `<div class="pl-head"><span class="avatar" style="background:${esc(p.color)}">${esc(initials(p.name))}</span>${esc(p.name)}</div>`).join('')}
+      <div class="pl-times" style="height:${H}px">${times.join('')}</div>${cols.join('')}
+    </div></div>
+    ${sel ? bookingDetail(sel) : `<aside class="card detail"><span class="label">Détail</span><p class="muted">Cliquez sur un rendez-vous du planning pour le gérer.</p>
+      <p class="muted" style="font-size:.86rem">Astuce test : ouvrez « Réserver » dans un autre onglet, prenez un rendez-vous, il apparaît ici.</p></aside>`}
+  </div>`;
+}
+function bookingDetail(b) {
+  const p = staffById(b.staffId) || { name: '—', color: 'var(--muted)' };
+  const act = (st, label, cls = '') => b.status === st ? '' : `<button class="btn sm ${cls}" data-act="bstatus" data-id="${esc(b.id)}" data-st="${st}">${label}</button>`;
+  return `<aside class="card detail">
+    <div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><span class="mono">${esc(b.id)}</span>${badge(b.status)}</div>
+    <div><h3>${esc(b.client.name)}</h3><span class="muted num">${esc(b.client.phone)}${b.client.email ? ' · ' + esc(b.client.email) : ''}</span>${b.client.first ? '<br><span class="badge st-pending">1re visite</span>' : ''}</div>
+    <dl class="kv"><dt>Quand</dt><dd style="text-transform:capitalize">${fmtShort(b.date)} · ${b.time}–${toHM(toMin(b.time) + (+b.duration))}</dd>
+      <dt>Prestation</dt><dd>${esc(b.serviceName)}${b.lengthLabel ? ` <span class="muted">(${esc(b.lengthLabel)})</span>` : ''}</dd>
+      ${b.options && b.options.length ? `<dt>Options</dt><dd>${b.options.map(o => esc(o.name)).join(', ')}</dd>` : ''}
+      <dt>Coiffeur</dt><dd>${esc(p.name)}${b.anyStaff ? ' <span class="muted">(attribué)</span>' : ''}</dd>
+      <dt>Total</dt><dd class="num">${euro(b.price)}</dd>
+      <dt>Source</dt><dd>${esc(b.source || 'en ligne')}${b.demo ? ' · démo' : ''}</dd></dl>
+    ${b.client.note ? `<p class="notice info">« ${esc(b.client.note)} »</p>` : ''}
+    <div class="btns">${act('confirmed', 'Confirmer')}${act('done', 'Honoré')}${act('noshow', 'Absent')}${act('cancelled', 'Annuler', 'danger')}</div>
+    <button class="btn sm ghost" data-act="psel" data-id="">Fermer</button>
+  </aside>`;
+}
+function proList() {
+  const t = today(), q = P.q.trim().toLowerCase();
+  let list = Store.bookings.slice();
+  if (P.filter === 'upcoming') list = list.filter(b => b.date >= t); else if (P.filter === 'past') list = list.filter(b => b.date < t);
+  if (P.status !== 'all') list = list.filter(b => b.status === P.status);
+  if (q) list = list.filter(b => [b.id, b.client.name, b.client.phone, b.client.email, b.serviceName].join(' ').toLowerCase().includes(q));
+  list.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time) * (P.filter === 'past' ? -1 : 1));
+  return `<div class="toolbar">
+    <input id="p-q" class="grow" type="search" placeholder="Rechercher un client, un téléphone, un n°…" data-pbind="q" value="${esc(P.q)}">
+    <select id="p-filter" data-pbind="filter"><option value="upcoming" ${P.filter === 'upcoming' ? 'selected' : ''}>À venir</option><option value="past" ${P.filter === 'past' ? 'selected' : ''}>Passés</option><option value="all" ${P.filter === 'all' ? 'selected' : ''}>Tous</option></select>
+    <select id="p-status" data-pbind="status" style="width:auto"><option value="all">Tous statuts</option>${Object.entries(STATUS).map(([k, v]) => `<option value="${k}" ${P.status === k ? 'selected' : ''}>${v}</option>`).join('')}</select>
+  </div>
+  ${list.length ? `<div class="table-wrap"><table><thead><tr><th>Date</th><th>Client</th><th>Prestation</th><th>Coiffeur</th><th class="r">Prix</th><th>Statut</th><th>Actions</th></tr></thead><tbody>
+  ${list.map(b => `<tr><td class="num" style="white-space:nowrap">${fmtShort(b.date)} · ${b.time}</td>
+    <td><b>${esc(b.client.name)}</b><br><span class="muted num">${esc(b.client.phone)}</span></td>
+    <td>${esc(b.serviceName)}${b.options && b.options.length ? `<br><span class="muted">+ ${b.options.map(o => esc(o.name)).join(', ')}</span>` : ''}</td>
+    <td>${esc((staffById(b.staffId) || {}).name || '—')}</td><td class="r num">${euro(b.price)}</td><td>${badge(b.status)}</td>
+    <td style="white-space:nowrap">${b.status === 'pending' ? `<button class="btn sm" data-act="bstatus" data-id="${esc(b.id)}" data-st="confirmed">Valider</button> ` : ''}<button class="btn sm ghost" data-act="open-in-planning" data-id="${esc(b.id)}">Voir</button></td></tr>`).join('')}
+  </tbody></table></div>` : '<div class="card empty">Aucun rendez-vous pour ces filtres. Testez en réservant depuis l’interface « Réserver », ou générez des rendez-vous de démo dans l’onglet Développeur.</div>'}`;
+}
+function proCatalogue() {
+  const ro = Store.canEditConfig ? '' : 'disabled';
+  const catSel = (s) => `<select data-cfg="services.${esc(s.id)}.cat" ${ro}>${CATEGORIES.map(c => `<option value="${c.id}" ${c.id === s.cat ? 'selected' : ''}>${c.label}</option>`).join('')}</select>`;
+  return `<div style="display:grid;gap:22px">
+  <section style="display:grid;gap:10px"><div class="toolbar" style="margin:0;justify-content:space-between"><h2>Prestations</h2><button class="btn" data-act="add-svc" ${ro}>+ Ajouter une prestation</button></div>
+  <div class="table-wrap"><table><thead><tr><th>Active</th><th>Nom</th><th>Catégorie</th><th class="r">Durée (min)</th><th class="r">Prix (€)</th><th title="Supplément selon la longueur des cheveux">Longueur</th><th></th></tr></thead><tbody>
+  ${C().services.map(s => `<tr class="${s.active === false ? 'inactive' : ''}"><td><input type="checkbox" data-cfg="services.${esc(s.id)}.active" ${s.active !== false ? 'checked' : ''} ${ro}></td>
+    <td><input type="text" data-cfg="services.${esc(s.id)}.name" value="${esc(s.name)}" ${ro} style="min-width:180px"><input type="text" data-cfg="services.${esc(s.id)}.desc" value="${esc(s.desc || '')}" placeholder="Description" ${ro} style="margin-top:4px;font-size:.82rem"></td>
+    <td>${catSel(s)}</td><td class="r"><input type="number" min="5" step="5" data-cfg="services.${esc(s.id)}.duration" value="${s.duration}" ${ro}></td>
+    <td class="r"><input type="number" min="0" step="1" data-cfg="services.${esc(s.id)}.price" value="${s.price}" ${ro}></td>
+    <td><input type="checkbox" data-cfg="services.${esc(s.id)}.length" ${s.length ? 'checked' : ''} ${ro}></td>
+    <td><button class="btn sm ghost" data-act="del-item" data-list="services" data-id="${esc(s.id)}" ${ro} aria-label="Supprimer">✕</button></td></tr>`).join('')}
+  </tbody></table></div></section>
+  <section style="display:grid;gap:10px"><div class="toolbar" style="margin:0;justify-content:space-between"><h2>Options & soins</h2><button class="btn" data-act="add-opt" ${ro}>+ Ajouter une option</button></div>
+  <div class="table-wrap"><table><thead><tr><th>Active</th><th>Nom</th><th>Description</th><th class="r">Durée (min)</th><th class="r">Prix (€)</th><th></th></tr></thead><tbody>
+  ${C().options.map(o => `<tr class="${o.active === false ? 'inactive' : ''}"><td><input type="checkbox" data-cfg="options.${esc(o.id)}.active" ${o.active !== false ? 'checked' : ''} ${ro}></td>
+    <td><input type="text" data-cfg="options.${esc(o.id)}.name" value="${esc(o.name)}" ${ro} style="min-width:160px"></td>
+    <td><input type="text" data-cfg="options.${esc(o.id)}.desc" value="${esc(o.desc || '')}" ${ro} style="min-width:180px"></td>
+    <td class="r"><input type="number" min="0" step="5" data-cfg="options.${esc(o.id)}.duration" value="${o.duration}" ${ro}></td>
+    <td class="r"><input type="number" min="0" step="1" data-cfg="options.${esc(o.id)}.price" value="${o.price}" ${ro}></td>
+    <td><button class="btn sm ghost" data-act="del-item" data-list="options" data-id="${esc(o.id)}" ${ro} aria-label="Supprimer">✕</button></td></tr>`).join('')}
+  </tbody></table></div></section>
+  <section class="card section"><h2>Suppléments selon la longueur</h2><p class="muted">S’appliquent aux prestations cochées « Longueur ».</p>
+  <div class="table-wrap"><table><thead><tr><th>Longueur</th><th>Indication</th><th class="r">+ Prix (€)</th><th class="r">+ Durée (min)</th></tr></thead><tbody>
+  ${Object.entries(C().rules.lengths).map(([k, L]) => `<tr><td><input type="text" data-cfg="rules.lengths.${k}.label" value="${esc(L.label)}" ${ro}></td><td><input type="text" data-cfg="rules.lengths.${k}.hint" value="${esc(L.hint || '')}" ${ro}></td>
+    <td class="r"><input type="number" min="0" data-cfg="rules.lengths.${k}.price" value="${L.price}" ${ro}></td><td class="r"><input type="number" min="0" step="5" data-cfg="rules.lengths.${k}.dur" value="${L.dur}" ${ro}></td></tr>`).join('')}
+  </tbody></table></div></section></div>`;
+}
+function proTeam() {
+  const ro = Store.canEditConfig ? '' : 'disabled';
+  return `<div class="toolbar" style="justify-content:space-between"><h2>Équipe</h2><button class="btn" data-act="add-staff" ${ro}>+ Ajouter un coiffeur</button></div>
+  <div class="grid2">${C().staff.map(p => `<section class="card staff-edit" style="${p.active === false ? 'opacity:.6' : ''}">
+    <div style="display:flex;gap:12px;align-items:center"><span class="avatar" style="background:${esc(p.color)}">${esc(initials(p.name))}</span>
+      <div class="form-grid" style="flex:1"><label class="field"><span>Prénom</span><input type="text" data-cfg="staff.${esc(p.id)}.name" value="${esc(p.name)}" ${ro}></label>
+      <label class="field"><span>Spécialité</span><input type="text" data-cfg="staff.${esc(p.id)}.role" value="${esc(p.role)}" ${ro}></label></div></div>
+    <div class="field"><span>Jours de travail</span><div class="chips">${WEEK_ORDER.map(d => `<label class="chip"><input type="checkbox" data-cfg-arr="staff.${esc(p.id)}.days" value="${d}" ${(p.days || []).includes(d) ? 'checked' : ''} ${ro}>${DAY_NAMES[d].slice(0, 3)}</label>`).join('')}</div></div>
+    <div class="field"><span>Prestations réalisées</span><div class="chips">${CATEGORIES.map(c => `<label class="chip"><input type="checkbox" data-cfg-arr="staff.${esc(p.id)}.cats" value="${c.id}" ${(p.cats || []).includes(c.id) ? 'checked' : ''} ${ro}>${c.label}</label>`).join('')}</div></div>
+    <div class="actions"><label class="check"><input type="checkbox" data-cfg="staff.${esc(p.id)}.active" ${p.active !== false ? 'checked' : ''} ${ro}><span>Réservable en ligne</span></label>
+      <span style="display:flex;gap:8px;align-items:center"><input type="color" data-cfg="staff.${esc(p.id)}.color" value="${esc(p.color)}" ${ro} aria-label="Couleur planning" style="width:38px;height:32px;border:0;background:none;padding:0">
+      <button class="btn sm danger" data-act="del-item" data-list="staff" data-id="${esc(p.id)}" ${ro}>Retirer</button></span></div>
+  </section>`).join('')}</div>`;
+}
+function proRules() {
+  const ro = Store.canEditConfig ? '' : 'disabled', R = C().rules, S = C().salon;
+  const num = (k, label, hint, min = 0, step = 1) => `<label class="field"><span>${label}</span><input type="number" min="${min}" step="${step}" data-cfg="rules.${k}" value="${R[k]}" ${ro}>${hint ? `<small class="muted">${hint}</small>` : ''}</label>`;
+  const chk = (k, label) => `<label class="check"><input type="checkbox" data-cfg="rules.${k}" ${R[k] ? 'checked' : ''} ${ro}><span>${label}</span></label>`;
+  return `<div class="grid2">
+  <section class="card section"><h2>Horaires d’ouverture</h2>
+    <div class="hours-row head"><span>Jour</span><span>Ouvert</span><span>Ouverture</span><span>Fermeture</span><span class="brk">Pause début</span><span class="brk">Pause fin</span></div>
+    ${WEEK_ORDER.map(d => { const h = C().hours[d]; return `<div class="hours-row"><b>${DAY_NAMES[d]}</b><input type="checkbox" data-cfg="hours.${d}.open" ${h.open ? 'checked' : ''} ${ro} style="accent-color:var(--accent);width:18px;height:18px">
+      <input type="time" data-cfg="hours.${d}.start" value="${h.start}" ${ro} ${h.open ? '' : 'disabled'}><input type="time" data-cfg="hours.${d}.end" value="${h.end}" ${ro} ${h.open ? '' : 'disabled'}>
+      <input class="brk" type="time" data-cfg="hours.${d}.breakStart" value="${h.breakStart || ''}" ${ro} ${h.open ? '' : 'disabled'}><input class="brk" type="time" data-cfg="hours.${d}.breakEnd" value="${h.breakEnd || ''}" ${ro} ${h.open ? '' : 'disabled'}></div>`; }).join('')}
+    <h3 style="margin-top:8px">Fermetures exceptionnelles</h3>
+    ${(C().closures || []).map((c, i) => `<div class="toolbar" style="margin:0"><input type="date" data-cfg="closures.${i}.date" value="${esc(c.date)}" ${ro} style="width:auto"><input type="text" class="grow" data-cfg="closures.${i}.label" value="${esc(c.label)}" ${ro}><button class="btn sm ghost" data-act="del-closure" data-i="${i}" ${ro} aria-label="Supprimer">✕</button></div>`).join('') || '<p class="muted">Aucune.</p>'}
+    <div><button class="btn sm" data-act="add-closure" ${ro}>+ Ajouter une fermeture (congés, jour férié…)</button></div>
+  </section>
+  <div style="display:grid;gap:18px">
+  <section class="card section"><h2>Règles de réservation</h2>
+    <div class="form-grid">
+      <label class="field"><span>Pas des créneaux</span><select data-cfg="rules.slotStep" ${ro}>${[10, 15, 20, 30, 60].map(v => `<option value="${v}" ${+R.slotStep === v ? 'selected' : ''}>${v} min</option>`).join('')}</select></label>
+      ${num('bufferMin', 'Temps de battement (min)', 'Nettoyage du poste entre deux clients', 0, 5)}
+      ${num('minNoticeHours', 'Délai minimum (heures)', 'Pas de réservation à la dernière minute')}
+      ${num('maxDaysAhead', 'Réservable jusqu’à (jours)', '', 1)}
+      ${num('cancelHours', 'Annulation en ligne jusqu’à (h avant)', '')}
+      ${num('maxOptions', 'Options max par RDV', '0 = illimité')}
+      ${num('depositPct', 'Acompte demandé (%)', 'Affiché au client, 0 = aucun', 0, 5)}
+    </div>
+    ${chk('autoConfirm', 'Confirmer automatiquement les rendez-vous (sinon : « en attente » à valider)')}
+    ${chk('allowNoPreference', 'Proposer « Sans préférence » pour le coiffeur')}
+    ${chk('requireEmail', 'E-mail obligatoire')}
+  </section>
+  <section class="card section"><h2>Fiche du salon</h2><div class="form-grid">
+    <label class="field"><span>Nom</span><input type="text" data-cfg="salon.name" value="${esc(S.name)}" ${ro}></label>
+    <label class="field"><span>Accroche</span><input type="text" data-cfg="salon.tagline" value="${esc(S.tagline)}" ${ro}></label>
+    <label class="field full"><span>Adresse</span><input type="text" data-cfg="salon.address" value="${esc(S.address)}" ${ro}></label>
+    <label class="field"><span>Téléphone</span><input type="text" data-cfg="salon.phone" value="${esc(S.phone)}" ${ro}></label>
+    <label class="field"><span>E-mail</span><input type="text" data-cfg="salon.email" value="${esc(S.email)}" ${ro}></label>
+  </div></section></div></div>`;
+}
+function proDev() {
+  const modes = {
+    local: 'Navigateur (localStorage). Les données restent dans ce navigateur ; ouvrez « Réserver » et « Espace pro » dans deux onglets pour tester, ils se synchronisent.',
+    api: 'API REST du serveur Node (server.js). Données dans data/db.json, partagées par tous les visiteurs du serveur.',
+    db: 'Base partagée de la page claude.ai. Toute personne ayant accès à la page voit les mêmes rendez-vous en direct.',
+    init: 'Connexion en cours…'
+  };
+  const state = { config: C(), bookings: Store.bookings };
+  const c = P.confirm;
+  const confirmBox = (key, label, act) => c === key ? `<span class="notice err" style="display:inline-flex;gap:8px;align-items:center;padding:6px 10px">Confirmer ? <button class="btn sm danger" data-act="${act}">Oui</button><button class="btn sm" data-act="pconfirm" data-id="">Non</button></span>` : `<button class="btn danger" data-act="pconfirm" data-id="${key}">${label}</button>`;
+  return `<div class="grid2">
+  <section class="card section"><h2>Environnement</h2>
+    <dl class="kv"><dt>Stockage</dt><dd><b class="mono">${Store.mode}</b></dd><dt></dt><dd class="muted">${modes[Store.mode]}</dd>
+    <dt>Réservations</dt><dd class="num">${Store.bookings.length} (dont ${Store.bookings.filter(b => b.demo).length} de démo)</dd>
+    <dt>Prestations</dt><dd class="num">${C().services.length} · ${C().options.length} options · ${C().staff.length} coiffeurs</dd></dl>
+    <h3>Jeu de test</h3>
+    <div class="toolbar" style="margin:0">
+      <button class="btn primary" data-act="demo">Générer 20 RDV de démo (7 jours)</button>
+      ${confirmBox('demo-del', 'Supprimer les RDV de démo', 'demo-del')}
+    </div>
+    <h3>Zone de réinitialisation</h3>
+    <div class="toolbar" style="margin:0">
+      ${confirmBox('reset-cfg', 'Remettre la config par défaut', 'reset-cfg')}
+      ${confirmBox('del-all', 'Supprimer tous les RDV', 'del-all')}
+    </div>
+  </section>
+  <section class="card section"><h2>API REST (serveur Node)</h2>
+    <p class="muted">Disponible quand l’app tourne via <span class="mono">node server.js</span>.</p>
+    <div class="endpoint">
+      <b>GET</b><span>/api/state → { config, bookings }</span>
+      <b>PUT</b><span>/api/config ← { config }</span>
+      <b>GET</b><span>/api/bookings?date=AAAA-MM-JJ</span>
+      <b>POST</b><span>/api/bookings ← réservation (409 si créneau pris)</span>
+      <b>PATCH</b><span>/api/bookings/:id ← { status }</span>
+      <b>POST</b><span>/api/bookings/delete ← { ids: [] }</span>
+      <b>PUT</b><span>/api/state ← import complet</span>
+    </div>
+    <h3>Journal</h3>
+    <div class="log">${Store.log.map(l => `<div><span class="muted">${l.t}</span><span>${esc(l.msg)}</span></div>`).join('') || '<span class="muted">Aucun événement.</span>'}</div>
+  </section>
+  <section class="card section"><div class="toolbar" style="margin:0;justify-content:space-between"><h2>Export JSON</h2><button class="btn sm" data-act="copy-json">Copier</button></div>
+    <pre class="json" id="json-out">${esc(JSON.stringify(state, null, 2))}</pre></section>
+  <section class="card section"><h2>Import JSON</h2><p class="muted">Collez un export (config + réservations) pour remplacer les données.</p>
+    <textarea id="import-text" data-pbind="importText" class="mono" style="min-height:180px" placeholder='{ "config": {...}, "bookings": [...] }'>${esc(P.importText)}</textarea>
+    ${P.importErr ? `<p class="notice err">${esc(P.importErr)}</p>` : ''}
+    <div><button class="btn" data-act="import" ${P.importText.trim() ? '' : 'disabled'}>Importer</button></div></section>
+  </div>`;
+}
+
+/* ============================================================
+   Actions
+   ============================================================ */
+function flash(msg) { P.flash = msg; render(); clearTimeout(flash.t); flash.t = setTimeout(() => { P.flash = ''; render(); }, 3500); }
+function setPath(obj, path, val) {
+  const keys = path.split('.'); let o = obj;
+  for (let i = 0; i < keys.length - 1; i++) {
+    const k = keys[i];
+    if (Array.isArray(o) && isNaN(+k)) o = o.find(x => x.id === k); else o = o[k];
+    if (!o) return;
+  }
+  const last = keys[keys.length - 1];
+  o[last] = val;
+}
+function getPath(obj, path) { return path.split('.').reduce((o, k) => o == null ? o : Array.isArray(o) && isNaN(+k) ? o.find(x => x.id === k) : o[k], obj); }
+const NUM_FIELDS = /\.(duration|price|dur|slotStep|bufferMin|minNoticeHours|maxDaysAhead|cancelHours|maxOptions|depositPct)$/;
+
+async function submitBooking() {
+  const c = G.client, R = C().rules;
+  G.error = '';
+  if (!c.name.trim()) G.error = 'Indiquez votre nom.';
+  else if (normPhone(c.phone).length < 10) G.error = 'Indiquez un numéro de téléphone valide (10 chiffres).';
+  else if (R.requireEmail && !/^\S+@\S+\.\S+$/.test(c.email)) G.error = 'Indiquez une adresse e-mail valide.';
+  else if (c.email && !/^\S+@\S+\.\S+$/.test(c.email)) G.error = 'L’adresse e-mail semble incorrecte.';
+  else if (!c.consent) G.error = 'Cochez la case d’accord pour finaliser la réservation.';
+  if (G.error) return render();
+  const s = svcById(G.serviceId), q = quote(G);
+  const slot = freeSlots(G.date, guestStaffIds(s), q.duration).find(x => x.time === G.time);
+  if (!slot) { G.error = 'Ce créneau n’est plus disponible. Choisissez-en un autre.'; G.step = 4; G.time = null; return render(); }
+  const staffId = G.staffId === 'any' ? pickStaff(slot.staffIds, G.date) : G.staffId;
+  const b = {
+    id: bookingCode(), date: G.date, time: G.time, duration: q.duration, price: q.price, staffId, anyStaff: G.staffId === 'any',
+    serviceId: s.id, serviceName: s.name, lengthLabel: s.length ? C().rules.lengths[G.length].label : '',
+    options: G.optionIds.map(id => optById(id)).filter(Boolean).map(o => ({ id: o.id, name: o.name, price: +o.price })),
+    client: { name: c.name.trim(), phone: c.phone.trim(), email: c.email.trim(), note: c.note.trim(), first: !!c.first },
+    status: R.autoConfirm ? 'confirmed' : 'pending', source: route() === 'reserver' ? 'en ligne' : 'comptoir', createdAt: new Date().toISOString()
+  };
+  G.busy = true; render();
+  try { await Store.addBooking(b); G.done = b; M.code = b.id; M.phone = b.client.phone; }
+  catch (e) { G.error = e.code === 'slot_taken' ? 'Ce créneau vient d’être réservé par quelqu’un d’autre. Choisissez-en un autre.' : e.message; if (e.code === 'slot_taken') { G.step = 4; G.time = null; } }
+  G.busy = false; render(); window.scrollTo(0, 0);
+}
+function resetGuest() { Object.assign(G, { step: 1, serviceId: null, length: 'courts', optionIds: [], staffId: 'any', date: null, time: null, error: '', done: null, client: { name: '', phone: '', email: '', note: '', first: false, consent: false } }); }
+
+const DEMO_NAMES = ['Sophie Martin', 'Lucas Bernard', 'Emma Petit', 'Hugo Robert', 'Chloé Richard', 'Nathan Durand', 'Inès Moreau', 'Léo Simon', 'Manon Laurent', 'Jules Michel', 'Sarah Garcia', 'Tom Lefebvre', 'Jade Roux', 'Adam Fournier', 'Louise Girard'];
+async function generateDemo() {
+  const svcs = C().services.filter(s => s.active !== false), bks = Store.bookings.slice(); let n = 0, tries = 0;
+  while (n < 20 && tries < 400) {
+    tries++;
+    const s = svcs[Math.floor(Math.random() * svcs.length)], team = staffForService(s); if (!team.length) continue;
+    const date = addDays(today(), Math.floor(Math.random() * 7)), opts = Math.random() < .35 ? [C().options[Math.floor(Math.random() * C().options.length)].id] : [];
+    const len = ['courts', 'milongs', 'longs'][Math.floor(Math.random() * 3)];
+    const q = quote({ serviceId: s.id, optionIds: opts, length: len });
+    const slots = freeSlots(date, team.map(p => p.id), q.duration, bks); if (!slots.length) continue;
+    const sl = slots[Math.floor(Math.random() * slots.length)], name = DEMO_NAMES[Math.floor(Math.random() * DEMO_NAMES.length)];
+    const b = { id: bookingCode(), date, time: sl.time, duration: q.duration, price: q.price, staffId: sl.staffIds[Math.floor(Math.random() * sl.staffIds.length)], anyStaff: false,
+      serviceId: s.id, serviceName: s.name, lengthLabel: s.length ? C().rules.lengths[len].label : '', options: opts.map(id => optById(id)).map(o => ({ id: o.id, name: o.name, price: +o.price })),
+      client: { name, phone: '06 ' + Array.from({ length: 4 }, () => pad(Math.floor(Math.random() * 100))).join(' '), email: '', note: '', first: Math.random() < .2 },
+      status: Math.random() < .2 ? 'pending' : 'confirmed', source: 'démo', demo: true, createdAt: new Date().toISOString() };
+    bks.push(b);
+    try { await Store.addBooking(b); n++; } catch (e) { bks.pop(); if (e.code !== 'slot_taken') { flash('Génération interrompue : ' + e.message); return; } }
+  }
+  if (Store.mode === 'local') render();
+  flash(n + ' rendez-vous de démo ajoutés sur les 7 prochains jours.');
+}
+
+document.addEventListener('click', async e => {
+  const el = e.target.closest('[data-act]'); if (!el || el.disabled) return;
+  const a = el.dataset.act, id = el.dataset.id;
+  if (['INPUT', 'SELECT'].includes(el.tagName) && a !== 'opt') return;
+  switch (a) {
+    case 'cat': G.cat = id; break;
+    case 'svc': if (G.serviceId !== id) { G.optionIds = []; G.date = null; G.time = null; const s = svcById(id); if (G.staffId !== 'any' && !staffForService(s).some(p => p.id === G.staffId)) G.staffId = 'any'; } G.serviceId = id; G.step = 2; break;
+    case 'len': G.length = id; G.time = null; break;
+    case 'opt': { const on = el.checked; G.optionIds = on ? [...new Set([...G.optionIds, id])] : G.optionIds.filter(x => x !== id); G.time = null; break; }
+    case 'staff': G.staffId = id; G.time = null; break;
+    case 'goto': G.step = +el.dataset.step; G.error = ''; window.scrollTo(0, 0); break;
+    case 'date': G.date = id; G.time = null; break;
+    case 'time': G.time = id; break;
+    case 'restart': resetGuest(); break;
+    case 'lookup-mine': M.result = id; M.error = ''; break;
+    case 'm-cancel': M.confirmCancel = true; break;
+    case 'm-cancel-no': M.confirmCancel = false; break;
+    case 'm-cancel-yes': M.confirmCancel = false; await Store.updateBooking(M.result, { status: 'cancelled', cancelledBy: 'client' }); break;
+    case 'ptab': P.tab = id; P.confirm = null; break;
+    case 'pday': P.date = addDays(P.date, +el.dataset.n); P.sel = null; break;
+    case 'ptoday': P.date = today(); P.sel = null; break;
+    case 'psel': P.sel = id || null; break;
+    case 'open-in-planning': { const b = Store.bookings.find(x => x.id === id); if (b) { P.date = b.date; P.sel = id; P.tab = 'planning'; window.scrollTo(0, 0); } break; }
+    case 'bstatus': try { await Store.updateBooking(id, { status: el.dataset.st }); } catch (x) { flash('Modification impossible : ' + x.message); } return;
+    case 'pconfirm': P.confirm = id || null; break;
+    case 'demo': el.disabled = true; await generateDemo(); return;
+    case 'demo-del': P.confirm = null; await Store.removeBookings(b => b.demo, 'démo'); flash('Rendez-vous de démo supprimés.'); return;
+    case 'del-all': P.confirm = null; await Store.removeBookings(() => true, 'tous'); flash('Toutes les réservations ont été supprimées.'); return;
+    case 'reset-cfg': P.confirm = null; await Store.saveConfig(clone(DEFAULT_CONFIG), 'réinitialisation'); flash('Configuration par défaut restaurée.'); return;
+    case 'copy-json': { const txt = document.getElementById('json-out').textContent; try { await navigator.clipboard.writeText(txt); flash('JSON copié.'); } catch (x) { const r = document.createRange(); r.selectNodeContents(document.getElementById('json-out')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); } return; }
+    case 'import': try { const d = JSON.parse(P.importText); if (!d || typeof d !== 'object') throw new Error(); P.importErr = ''; await Store.importAll(d); P.importText = ''; flash('Import terminé.'); } catch (x) { P.importErr = 'JSON invalide : vérifiez que le texte commence par { et contient "config" ou "bookings".'; render(); } return;
+    case 'add-svc': { const cfg = clone(C()); cfg.services.push({ id: 'svc-' + rid(), cat: 'femme', name: 'Nouvelle prestation', desc: '', duration: 30, price: 30, length: false, active: true }); await Store.saveConfig(cfg, 'ajout prestation'); return; }
+    case 'add-opt': { const cfg = clone(C()); cfg.options.push({ id: 'opt-' + rid(), name: 'Nouvelle option', desc: '', duration: 10, price: 10, active: true }); await Store.saveConfig(cfg, 'ajout option'); return; }
+    case 'add-staff': { const cfg = clone(C()); cfg.staff.push({ id: 'st-' + rid(), name: 'Nouveau', role: 'Coiffeur', color: '#5B7F6E', days: [2, 3, 4, 5, 6], cats: ['femme', 'homme'], active: true }); await Store.saveConfig(cfg, 'ajout coiffeur'); return; }
+    case 'del-item': { const cfg = clone(C()), L = el.dataset.list; cfg[L] = cfg[L].filter(x => x.id !== id); await Store.saveConfig(cfg, 'suppression ' + L); return; }
+    case 'add-closure': { const cfg = clone(C()); cfg.closures.push({ date: addDays(today(), 7), label: 'Congés' }); await Store.saveConfig(cfg, 'fermeture'); return; }
+    case 'del-closure': { const cfg = clone(C()); cfg.closures.splice(+el.dataset.i, 1); await Store.saveConfig(cfg, 'fermeture'); return; }
+    default: return;
+  }
+  render();
+});
+document.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('li[data-act]')) { e.preventDefault(); e.target.click(); } });
+document.addEventListener('input', e => {
+  const t = e.target;
+  if (t.dataset.bind) { G.client[t.dataset.bind] = t.type === 'checkbox' ? t.checked : t.value; return; }
+  if (t.dataset.mbind) { M[t.dataset.mbind] = t.value; return; }
+  if (t.dataset.pbind) { P[t.dataset.pbind] = t.value; if (t.dataset.pbind === 'importText') { const b = document.querySelector('[data-act="import"]'); if (b) b.disabled = !t.value.trim(); return; } render(); }
+});
+document.addEventListener('change', async e => {
+  const t = e.target;
+  if (t.dataset.act === 'pdate' && t.value) { P.date = t.value; P.sel = null; render(); return; }
+  if (t.dataset.cfg) {
+    const cfg = clone(C()), path = t.dataset.cfg;
+    let v = t.type === 'checkbox' ? t.checked : t.value;
+    if (NUM_FIELDS.test(path)) v = Math.max(0, Number(v) || 0);
+    setPath(cfg, path, v); await Store.saveConfig(cfg, path.split('.').slice(0, 1)[0]); return;
+  }
+  if (t.dataset.cfgArr) {
+    const cfg = clone(C()), arr = getPath(cfg, t.dataset.cfgArr) || [], raw = t.value, v = isNaN(+raw) ? raw : +raw;
+    setPath(cfg, t.dataset.cfgArr, t.checked ? [...new Set([...arr, v])] : arr.filter(x => x !== v));
+    await Store.saveConfig(cfg, 'équipe'); return;
+  }
+});
+document.addEventListener('submit', e => {
+  e.preventDefault();
+  if (e.target.id === 'client-form') submitBooking();
+  if (e.target.id === 'mine-form') {
+    const b = Store.bookings.find(x => x.id.toUpperCase() === M.code.trim().toUpperCase());
+    M.confirmCancel = false;
+    if (b && normPhone(b.client.phone).slice(-9) === normPhone(M.phone).slice(-9)) { M.result = b.id; M.error = ''; }
+    else { M.result = null; M.error = 'Aucun rendez-vous ne correspond. Vérifiez le numéro (format AM-XXXXX) et le téléphone utilisé lors de la réservation.'; }
+    render();
+  }
+});
+window.addEventListener('hashchange', () => { render(); window.scrollTo(0, 0); });
+setInterval(() => { if (route() === 'pro' && P.tab === 'planning') render(); }, 60000);
+
+render();
+Store.init();
+</script>
