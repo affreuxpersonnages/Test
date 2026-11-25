@@ -1,0 +1,60 @@
+name: TikTok transcribe
+
+on:
+  push:
+    branches: [claude/github-mobile-access-6bocqu]
+    paths:
+      - tiktok/accounts.txt
+      - tiktok/transcribe.py
+      - .github/workflows/tiktok-transcribe.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tiktok-transcribe
+  cancel-in-progress: true
+
+jobs:
+  transcribe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg tesseract-ocr tesseract-ocr-fra
+          pip install -q -U yt-dlp faster-whisper pytesseract pillow
+
+      - name: Download videos and metadata
+        continue-on-error: true
+        run: |
+          mkdir -p work
+          while read -r acc; do
+            [ -z "$acc" ] && continue
+            yt-dlp "https://www.tiktok.com/@${acc}" \
+              --ignore-errors --no-overwrites \
+              --playlist-end 60 \
+              --sleep-requests 1 \
+              --write-info-json \
+              -f "best[height<=720]/best" \
+              -o "work/${acc}/%(upload_date)s_%(id)s.%(ext)s" 2>&1 | tail -n 40
+          done < tiktok/accounts.txt
+          find work -type f | head -n 200
+
+      - name: Transcribe, OCR and build report
+        run: python tiktok/transcribe.py work tiktok/output
+
+      - name: Commit results
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898+github-actions[bot]@users.noreply.github.com"
+          git add tiktok/output
+          git commit -m "TikTok transcripts (automated)" || echo "nothing to commit"
+          git push
