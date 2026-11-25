@@ -40,7 +40,7 @@ jobs:
             [ -z "$acc" ] && continue
             yt-dlp "https://www.tiktok.com/@${acc}" \
               --ignore-errors --no-overwrites \
-              --playlist-end 60 \
+              --playlist-end 10 \
               --sleep-requests 1 \
               --write-info-json \
               -f "best[height<=720]/best" \
