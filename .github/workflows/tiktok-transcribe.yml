@@ -28,30 +28,42 @@ jobs:
           python-version: "3.12"
 
       - name: Install tools
+        continue-on-error: true
         run: |
+          mkdir -p tiktok/output
+          exec > >(tee -a tiktok/output/log.txt) 2>&1
+          echo "== install" 
           sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg tesseract-ocr tesseract-ocr-fra
           pip install -q -U yt-dlp faster-whisper pytesseract pillow
 
       - name: Download videos and metadata
         continue-on-error: true
         run: |
+          exec > >(tee -a tiktok/output/log.txt) 2>&1
+          echo "== download"
+          yt-dlp --version
           mkdir -p work
           while read -r acc; do
             [ -z "$acc" ] && continue
             yt-dlp "https://www.tiktok.com/@${acc}" \
               --ignore-errors --no-overwrites \
-              --playlist-end 10 \
+              --playlist-end 10 -v \
               --sleep-requests 1 \
               --write-info-json \
               -f "best[height<=720]/best" \
-              -o "work/${acc}/%(upload_date)s_%(id)s.%(ext)s" 2>&1 | tail -n 40
+              -o "work/${acc}/%(upload_date)s_%(id)s.%(ext)s" 2>&1 | tail -n 80
           done < tiktok/accounts.txt
           find work -type f | head -n 200
 
       - name: Transcribe, OCR and build report
-        run: python tiktok/transcribe.py work tiktok/output
+        continue-on-error: true
+        run: |
+          exec > >(tee -a tiktok/output/log.txt) 2>&1
+          echo "== transcribe"
+          python tiktok/transcribe.py work tiktok/output
 
       - name: Commit results
+        if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898+github-actions[bot]@users.noreply.github.com"
